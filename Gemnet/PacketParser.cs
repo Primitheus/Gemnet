@@ -18,7 +18,7 @@ namespace SendPacket
 
         public async Task ProcessPacketAsync(ushort type, ushort action, byte[] packetBody)
         {
-            // Add your packet processing logic here
+            // Add packet processing logic here
 
                 switch ((HeaderType)type)
                 {
