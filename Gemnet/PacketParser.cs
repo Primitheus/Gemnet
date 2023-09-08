@@ -3,6 +3,7 @@ using Gemnet.Packets;
 using Gemnet.Packets.Enums;
 using static Gemnet.Packets.Enums.Packets;
 using Gemnet.PacketProcessors;
+using Gemnet.Network.Packets;
 
 namespace SendPacket
 {
@@ -76,6 +77,7 @@ namespace SendPacket
                     break;
                 case ActionLogin.TO_LOBBY:
                     // Process TO_LOBBY
+                    Login.TO_LOBBY(type, action, packetBody);
                     break;
                 default:
                     Console.WriteLine($"Unknown action for Login packet: {action}");
@@ -237,6 +239,7 @@ namespace SendPacket
                    break;
                 case ActionQuery.GET_ROOM: // ACTION.GET_ROOM
                            // Process GET_ROOM action
+                    Query.GetRoomList(type, action, packetBody);
                     break;
                 case ActionQuery.CREATE_ROOM: // ACTION.CREATE_ROOM
                            // Process CREATE_ROOM action

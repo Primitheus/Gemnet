@@ -1,5 +1,6 @@
 ﻿using System;
 using Gemnet.Network.Header;
+using Gemnet.Network.Packets;
 using Gemnet.Packets.Login;
 using Gemnet.Persistence.Models;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -106,6 +107,20 @@ namespace Gemnet.PacketProcessors
 
             _ = ServerHolder.ServerInstance.SendPacket(type, 0x06, action);
         }
+
+        public static void TO_LOBBY(ushort type, ushort action, byte[] body) {
+            action++;
+            ToLobbyReq request = ToLobbyReq.Deserialize(body);
+            Console.WriteLine($"To Lobby");
+
+            ToLobbyRes response = new ToLobbyRes();
+            response.Type = 528;
+            response.Action = action;
+
+            response.Result = 1;
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
+        } 
 
     }
 }
