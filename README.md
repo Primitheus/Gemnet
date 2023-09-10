@@ -25,6 +25,9 @@ Rumble Fighter/Gem Fighter Server Emulator.
     * Enchantment & Avalon
     * Boss Mode Rewards
     * LvlUp Packages
+    * Plaza
+    * Fishing
+    * Runes
   
 
 
