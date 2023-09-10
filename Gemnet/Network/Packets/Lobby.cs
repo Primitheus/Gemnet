@@ -1,4 +1,5 @@
 using Gemnet.Network.Header;
+using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -46,6 +47,121 @@ namespace Gemnet.Network.Packets
         }
     }
 
+    public class CreateRoomReq : HeaderPacket 
+    {
+        public int unkownvalue1 {get; set;}
+        public int unkownvalue2 {get; set;}
+        public string SomeID {get; set;}
+        public string SomeID2 {get; set;}
+        public string RoomName {get; set;}
+
+        public new static CreateRoomReq Deserialize(byte[] data)
+        {
+            CreateRoomReq packet = new CreateRoomReq();
+
+            int offset = 6;
+            int nullTerminator = 0;
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            offset += 2;
+            packet.unkownvalue1 = BitConverter.ToInt32(data, offset); // seems to always be 0x8c not sure.
+            offset += 4;
+            packet.SomeID = Encoding.ASCII.GetString(data, offset, 4); // again, probably the p2p room id?
+            nullTerminator = packet.SomeID.IndexOf('\x00');
+            packet.SomeID = packet.SomeID.Remove(nullTerminator);
+            offset += 38;
+            packet.unkownvalue2 = BitConverter.ToInt32(data, offset); // might actually be the password. starting at offset 32, if no password then offset 38 is set to 0x09.
+            offset += 4;
+            packet.SomeID2 = Encoding.ASCII.GetString(data, offset, 4);
+            nullTerminator = packet.SomeID2.IndexOf('\x00');
+            packet.SomeID2 = packet.SomeID2.Remove(nullTerminator);
+            offset += 6;
+            packet.RoomName = Encoding.ASCII.GetString(data, offset, 32);
+            nullTerminator = packet.RoomName.IndexOf('\x00');
+            packet.RoomName = packet.RoomName.Remove(nullTerminator);
+
+            return packet;
+        }
+
+
+    }
+
+    public class CreateRoomRes : HeaderPacket
+    {
+
+        public int Result {get; set;} //Currently guessing it's a result packet.
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[15];
+
+            Size = (ushort)(buffer.Length);
+
+            byte[] result = BitConverter.GetBytes(Result);
+
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+            offset += 6;
+
+            offset += 4;
+            result.CopyTo(buffer, offset);
+
+            return buffer;
+        }
+
+    }
+
+    public class LeaveRoomReq : HeaderPacket
+    {
+        public int Result {get; set;}
+        public new static LeaveRoomReq Deserialize(byte[] data)
+        {
+            LeaveRoomReq packet = new LeaveRoomReq();
+
+            int offset = 6;
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            offset += 4;
+            packet.Result = BitConverter.ToInt32(data, offset);
+
+            return packet;
+        }
+    }
+
+    public class LeaveRoomRes : HeaderPacket
+    {
+        public int Result {get; set;}
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[12];
+
+            Size = (ushort)(buffer.Length);
+
+            byte[] result = BitConverter.GetBytes(Result);
+
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+            offset += 6;
+
+            offset += 4;
+            result.CopyTo(buffer, offset);
+
+            return buffer;
+        }
+
+    }
+
     public class GetRoomListReq : HeaderPacket 
     {
         public int ChannelID { get; set; }
@@ -87,9 +203,9 @@ namespace Gemnet.Network.Packets
         public int PlayerNumber {get; set; }
         public int MaxPlayers {get; set; }
         public int unknownValue10 {get; set; }
-        public int unknownValue10_1 {get; set; }
+        public int MatchType {get; set; } //Single or Team
 
-        public int unknownValue11 {get; set; }
+        public int GameMode {get; set; }
         public int unknownValue12 {get; set; }
         public int unknownValue13 {get; set; }
         public byte[] Time { get; set; }
@@ -122,9 +238,9 @@ namespace Gemnet.Network.Packets
             byte[] maxplayers = BitConverter.GetBytes(MaxPlayers);
             byte[] playernumber = BitConverter.GetBytes(PlayerNumber);
             byte[] unknownval10 = BitConverter.GetBytes(unknownValue10);
-            byte[] unknownval10_1 = BitConverter.GetBytes(unknownValue10_1);
+            byte[] matchtype = BitConverter.GetBytes(MatchType);
 
-            byte[] unknownval11 = BitConverter.GetBytes(unknownValue11);
+            byte[] gamemode = BitConverter.GetBytes(GameMode);
             byte[] unknownval12 = BitConverter.GetBytes(unknownValue12);
             byte[] unknownval13 = BitConverter.GetBytes(unknownValue13);
 
@@ -162,9 +278,9 @@ namespace Gemnet.Network.Packets
             offset += 1;
             unknownval10.CopyTo(buffer, offset);
             offset += 3;
-            unknownval10_1.CopyTo(buffer, offset);
+            matchtype.CopyTo(buffer, offset); // possible need to change offsets
             offset += 4;
-            unknownval11.CopyTo(buffer, offset);
+            gamemode.CopyTo(buffer, offset);
             offset += 5;
             unknownval12.CopyTo(buffer, offset);
             offset += 4;

@@ -25,7 +25,7 @@ namespace Gemnet.Network.Header
 
         public static HeaderPacket Deserialize(byte[] data)
         {
-            HeaderPacket packet = new HeaderPacket(); // Default to a specific packet type
+            HeaderPacket packet = new HeaderPacket();
             int offset = 0;
 
             packet.Type = ToUInt16BigEndian(data, offset);

@@ -175,17 +175,13 @@ namespace SendPacket
                     Inventory.GetCash((ushort)(HeaderType.INVENTORY), action, packetBody);
                     break;
                 case ActionInventory.UNKNOWN_6: // ACTION.UNKNOWN_6
-                           // Process UNKNOWN_6 action
                     General.Unknown(type, action);
                     break;
                 case ActionInventory.BUY_ITEM: // ACTION.BUY_ITEM
-                                               // Process BUY_ITEM action
                     Inventory.BuyItem(type, action, packetBody);
-                    
                     break;
 
                 case ActionInventory.OPEN_BOX: // ACTION.BUY_ITEM
-                                               // Process BUY_ITEM action
                     Inventory.OpenBox(type, action, packetBody);
 
                     break;
@@ -243,6 +239,7 @@ namespace SendPacket
                     break;
                 case ActionQuery.CREATE_ROOM: // ACTION.CREATE_ROOM
                            // Process CREATE_ROOM action
+                    Query.CreateRoom(type, action, packetBody);
                     break;
                 case ActionQuery.JOIN_ROOM_1: // ACTION.JOIN_ROOM_1
                            // Process JOIN_ROOM_1 action
@@ -255,6 +252,7 @@ namespace SendPacket
                     break;
                 case ActionQuery.LEAVE_ROOM: // ACTION.LEAVE_ROOM
                            // Process LEAVE_ROOM action
+                    Query.LeaveRoom(type, action, packetBody);
                     break;
                 case ActionQuery.CHANGE_MAP: // ACTION.CHANGE_MAP
                            // Process CHANGE_MAP action
