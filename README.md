@@ -6,16 +6,18 @@ Rumble Fighter/Gem Fighter Server Emulator.
     * Shop (CASH & CARAT prices not accurate)
     * Training
     * Boss Mode
-    * Channels
-    
+
+- In Progress
+  * Lobby
+  * Create/Join Rooms
+  * Opening Boxes/Packages
+  * Medal Shop
 
 - TODO
     * ProudNet Emulation
-    * Rooms
     * EXP/CARAT Rewards
     * Chat
     * Megaphone
-    * Opening Boxes/Packages
     * Avatar List
     * Character Creation
     * Guilds
@@ -23,6 +25,9 @@ Rumble Fighter/Gem Fighter Server Emulator.
     * Enchantment & Avalon
     * Boss Mode Rewards
     * LvlUp Packages
+    * Plaza
+    * Fishing
+    * Runes
   
 
 
