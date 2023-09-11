@@ -2,20 +2,23 @@
 Rumble Fighter/Gem Fighter Server Emulator.
 
 - Features
-    * Inventory
+    * Persistant Inventory
     * Shop (CASH & CARAT prices not accurate)
     * Training
     * Boss Mode
+    * Survival
 
 - In Progress
-  * Lobby
-  * Create/Join Rooms
-  * Opening Boxes/Packages
-  * Medal Shop
-  * EXP/CARAT Rewards
+    * Lobby
+    * Create/Join Rooms
+    * Opening Boxes/Packages
+    * Medal Shop
+    * EXP/CARAT Rewards
 
 - TODO
     * ProudNet Emulation
+    * Gift List
+    * Buddy List
     * Chat
     * Megaphone
     * Avatar List
@@ -28,9 +31,6 @@ Rumble Fighter/Gem Fighter Server Emulator.
     * Plaza
     * Fishing
     * Runes
-  
-
-
 
 ## Credits
   - Configuration and Persistence Model
