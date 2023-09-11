@@ -113,6 +113,8 @@ namespace Gemnet.Network.Packets
             byte[] carats = BitConverter.GetBytes(CARATS);
 
             byte[] buffer = new byte[1047];
+            Size = (ushort)(buffer.Length);
+            
             int offset = 0;
             base.Serialize().CopyTo(buffer, offset);
 
