@@ -289,7 +289,7 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public static void ToTraining(ushort type, ushort action, byte[] body) 
+        public static void BeginMatch(ushort type, ushort action, byte[] body) 
         {
             action++;
 

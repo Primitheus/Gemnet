@@ -51,7 +51,7 @@ namespace Gemnet.Packets.Enums
             TO_INFO = 0xbc,
             QUESTS = 0xcc,
             BUYING = 0xce,
-            TO_TRAINING = 0x80,
+            BEGIN_MATCH = 0x80,
             EQUIP_ITEM = 0xd6,
             JOIN_ROOM_BS = 0xa0,
 
@@ -83,6 +83,7 @@ namespace Gemnet.Packets.Enums
             CHANGE_MAP = 0xa8,
             START_GAME = 0x61,
             EQUIPPING = 0xa4,
+            END_MATCH = 0xb0,
 
         }  
 

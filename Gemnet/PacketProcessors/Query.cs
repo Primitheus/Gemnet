@@ -179,5 +179,38 @@ namespace Gemnet.PacketProcessors
 
         }
 
+        public static void GetReward(ushort type, ushort action, byte[] body)
+        {
+            action++;
+
+            RewardsReq request = RewardsReq.Deserialize(body);
+            
+            Console.WriteLine($"Rewards/Stats for {request.UserIGN}: Kills: {request.Kills}, EXP: {request.EXP}, CARATS: {request.Carat}.");
+
+            RewardsRes response = new RewardsRes();
+
+            response.Type = type;
+            response.Action = action;
+
+            response.UserIGN = request.UserIGN;
+            response.EXP = request.EXP;
+            response.CARATS = request.Carat;
+            response.Kills = request.Kills;
+            // static for now needs to be added into the DB then fetched.
+            response.NewCarats = 1337; 
+            response.NewExp = 1337; 
+            response.NNNNNNNNNN = "NNNNNNNNNN";
+            response.unknownvalue1 = request.unknown7;
+            response.unknownvalue2 = 1;
+            response.unknownvalue3 = request.unknown12;
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
+
+
+
+        }
+
+        
+
     }
 }

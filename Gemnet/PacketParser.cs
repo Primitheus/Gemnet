@@ -142,9 +142,9 @@ namespace SendPacket
                                            // Process BUYING action
                     General.Unknown(type, action);
                     break;
-                case ActionGeneral.TO_TRAINING: // ACTION.TO_TRAINING
+                case ActionGeneral.BEGIN_MATCH: // ACTION.TO_TRAINING
                                                 // Process TO_TRAINING action
-                    General.ToTraining(type, action, packetBody);
+                    General.BeginMatch(type, action, packetBody);
                     break;
                 case ActionGeneral.EQUIP_ITEM: // ACTION.EQUIP_ITEM
                                                // Process EQUIP_ITEM action
@@ -259,6 +259,9 @@ namespace SendPacket
                     break;
                 case ActionQuery.START_GAME: // ACTION.START_GAME
                            // Process START_GAME action
+                    break;
+                case ActionQuery.END_MATCH:
+                    Query.GetReward(type, action, packetBody);
                     break;
                 //case ActionQuery.EQUIPPING: // ACTION.EQUIPPING
                                             // Process EQUIPPING action
