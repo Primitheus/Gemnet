@@ -12,10 +12,10 @@ Rumble Fighter/Gem Fighter Server Emulator.
   * Create/Join Rooms
   * Opening Boxes/Packages
   * Medal Shop
+  * EXP/CARAT Rewards
 
 - TODO
     * ProudNet Emulation
-    * EXP/CARAT Rewards
     * Chat
     * Megaphone
     * Avatar List
