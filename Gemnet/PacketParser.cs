@@ -150,6 +150,12 @@ namespace SendPacket
                                                // Process EQUIP_ITEM action
                     General.Equip(type, action, packetBody);
                     break;
+                case ActionGeneral.GET_ZM_STATS:
+                    General.GetZMStats(type, action, packetBody);
+                    break;
+                case ActionGeneral.GET_ZM_STATS_2:
+                    General.GetZMStats2(type, action, packetBody);
+                    break;
                 default:
                     Console.WriteLine($"Unknown action for General packet: {action}");
                     break;

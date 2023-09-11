@@ -54,6 +54,8 @@ namespace Gemnet.Packets.Enums
             BEGIN_MATCH = 0x80,
             EQUIP_ITEM = 0xd6,
             JOIN_ROOM_BS = 0xa0,
+            GET_ZM_STATS = 0xd4,
+            GET_ZM_STATS_2 = 0xd2,
 
         }
 

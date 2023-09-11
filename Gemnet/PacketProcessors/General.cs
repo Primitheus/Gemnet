@@ -303,6 +303,25 @@ namespace Gemnet.PacketProcessors
             _ = ServerHolder.ServerInstance.SendPacket(data);
 
         }
+        
+        public static void GetZMStats(ushort type, ushort action, byte[] body) 
+        {
+            action++;
+
+            Console.WriteLine("Get ZM Stats.");
+
+
+        }
+
+        public static void GetZMStats2(ushort type, ushort action, byte[] body) 
+        {
+            action++;
+
+            Console.WriteLine("Get ZM Stats 2.");
+            
+
+        }
+
 
     }
 
