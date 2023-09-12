@@ -199,12 +199,10 @@ namespace Gemnet.Network.Packets
         public string SomeID {get; set;}
         public string RoomName {get; set;}
         public int unknownValue9 {get; set; }
-
         public int PlayerNumber {get; set; }
         public int MaxPlayers {get; set; }
         public int unknownValue10 {get; set; }
         public int MatchType {get; set; } //Single or Team
-
         public int GameMode {get; set; }
         public int unknownValue12 {get; set; }
         public int unknownValue13 {get; set; }

@@ -79,51 +79,39 @@ public class LoginRes : HeaderPacket
     public string IGN { get; set; }
     public int Exp { get; set; }
     public int Carats { get; set; }
-    //public int Astros { get; set; }
     public string GUID { get; set; }
     public string Token { get; set; }
     public string ForumName { get; set; }
 
+    private struct PropertyOffsets
+    {
+        public static readonly int UserID = 6; 
+        public static readonly int IGN = 10;
+        public static readonly int Exp = 34;
+        public static readonly int Carats = 38;
+        public static readonly int GUID = 96;
+        public static readonly int Token = 197;
+        public static readonly int ForumName = 262;
+    }
 
     public override byte[] Serialize()
     {
         byte[] buffer = new byte[326];
 
+        Size = (ushort)buffer.Length;
 
-        Size = (ushort)(buffer.Length);
+        base.Serialize().CopyTo(buffer, 0);
 
-        int offset = 0;
-
-        base.Serialize().CopyTo(buffer, offset);
-        offset += 6;
-
-        byte[] uuid = BitConverter.GetBytes(UserID);
-        byte[] ign = Encoding.ASCII.GetBytes(IGN);
-        byte[] exp = BitConverter.GetBytes(Exp);
-        byte[] carats = BitConverter.GetBytes(Carats);
-        byte[] guid = Encoding.ASCII.GetBytes(GUID.ToString());
-        byte[] token = Encoding.ASCII.GetBytes(Token.ToString());
-        byte[] forum_name = Encoding.ASCII.GetBytes(ForumName);
-
-        uuid.CopyTo(buffer, offset);
-        offset += 4;
-        ign.CopyTo(buffer, offset);
-        offset += 24;
-        exp.CopyTo(buffer, offset);
-        offset += 4;
-        carats.CopyTo(buffer, offset);
-        offset += 58;
-        guid.CopyTo(buffer, offset);
-        offset += 101;
-        token.CopyTo(buffer, offset);
-        offset += 65;
-        forum_name.CopyTo(buffer, offset);
+        BitConverter.GetBytes(UserID).CopyTo(buffer, PropertyOffsets.UserID);
+        Encoding.ASCII.GetBytes(IGN).CopyTo(buffer, PropertyOffsets.IGN);
+        BitConverter.GetBytes(Exp).CopyTo(buffer, PropertyOffsets.Exp);
+        BitConverter.GetBytes(Carats).CopyTo(buffer, PropertyOffsets.Carats);
+        Encoding.ASCII.GetBytes(GUID).CopyTo(buffer, PropertyOffsets.GUID);
+        Encoding.ASCII.GetBytes(Token).CopyTo(buffer, PropertyOffsets.Token);
+        Encoding.ASCII.GetBytes(ForumName).CopyTo(buffer, PropertyOffsets.ForumName);
 
         return buffer;
     }
-
-  
-
-
 }
+
 

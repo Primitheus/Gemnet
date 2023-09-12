@@ -48,6 +48,8 @@ namespace Gemnet.Network.Packets
 
 
             byte[] buffer = new byte[1047];
+            Size = (ushort)buffer.Length;
+            
             int offset = 0;
             base.Serialize().CopyTo(buffer, offset);
 
@@ -57,7 +59,7 @@ namespace Gemnet.Network.Packets
         }
     }
 
-      public class GetZMStats2Req : HeaderPacket
+    public class GetZMStats2Req : HeaderPacket
     {
         public int ID {get; set;}
 
@@ -74,7 +76,7 @@ namespace Gemnet.Network.Packets
             packet.Action = BitConverter.ToUInt16(data, 4);
 
             packet.ID = BitConverter.ToInt32(data, offset);
-            
+                
             return packet;
         }
     }
