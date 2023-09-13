@@ -98,19 +98,24 @@ namespace Gemnet.Network.Packets
         public int CARATS {get; set;}
         //exp again
 
+        private struct PropertyOffsets
+        {
+            public static readonly int NewCarats = 6; 
+            public static readonly int NewExp = 14;
+            public static readonly int unknownvalue1 = 30;
+            public static readonly int unknownvalue2 = 54;
+            public static readonly int UserIGN = 57;
+            public static readonly int unknownvalue3 = 78;
+            public static readonly int Kills = 81;
+            public static readonly int EXP = 85;
+            public static readonly int NNNNNNNNNN = 92;
+            public static readonly int CARATS = 102;
+            public static readonly int EXP2 = 110;
+
+        }
 
         public override byte[] Serialize()
         {
-            byte[] newcarats = BitConverter.GetBytes(NewCarats);
-            byte[] newexp = BitConverter.GetBytes(NewExp);
-            byte[] unknown1 = BitConverter.GetBytes(unknownvalue1);
-            byte[] unknown2 = BitConverter.GetBytes(unknownvalue2);
-            byte[] ign = Encoding.ASCII.GetBytes(UserIGN);
-            byte[] unknown3 = BitConverter.GetBytes(unknownvalue3);
-            byte[] kills = BitConverter.GetBytes(Kills);
-            byte[] exp = BitConverter.GetBytes(EXP);
-            byte[] n = Encoding.ASCII.GetBytes(NNNNNNNNNN);
-            byte[] carats = BitConverter.GetBytes(CARATS);
 
             byte[] buffer = new byte[1047];
             Size = (ushort)(buffer.Length);
@@ -118,29 +123,17 @@ namespace Gemnet.Network.Packets
             int offset = 0;
             base.Serialize().CopyTo(buffer, offset);
 
-            offset += 6;
-
-            newcarats.CopyTo(buffer, offset);
-            offset += 8;
-            newexp.CopyTo(buffer, offset);
-            offset += 16;
-            unknown1.CopyTo(buffer, offset);
-            offset += 24;
-            unknown2.CopyTo(buffer, offset);
-            offset += 3;
-            ign.CopyTo(buffer, offset);
-            offset += 21;
-            unknown3.CopyTo(buffer, offset);
-            offset += 3;
-            kills.CopyTo(buffer, offset);
-            offset += 4;
-            exp.CopyTo(buffer, offset);
-            offset += 7;
-            n.CopyTo(buffer, offset);
-            offset += 10;
-            carats.CopyTo(buffer, offset);
-            offset += 8;
-            exp.CopyTo(buffer, offset);
+            BitConverter.GetBytes(NewCarats).CopyTo(buffer, PropertyOffsets.NewCarats);
+            BitConverter.GetBytes(NewExp).CopyTo(buffer, PropertyOffsets.NewExp);
+            BitConverter.GetBytes(unknownvalue1).CopyTo(buffer, PropertyOffsets.unknownvalue1);
+            BitConverter.GetBytes(unknownvalue2).CopyTo(buffer, PropertyOffsets.unknownvalue2);
+            Encoding.ASCII.GetBytes(UserIGN).CopyTo(buffer, PropertyOffsets.UserIGN);
+            BitConverter.GetBytes(unknownvalue3).CopyTo(buffer, PropertyOffsets.unknownvalue3);
+            BitConverter.GetBytes(Kills).CopyTo(buffer, PropertyOffsets.Kills);
+            BitConverter.GetBytes(EXP).CopyTo(buffer, PropertyOffsets.EXP);
+            Encoding.ASCII.GetBytes(NNNNNNNNNN).CopyTo(buffer, PropertyOffsets.NNNNNNNNNN);
+            BitConverter.GetBytes(CARATS).CopyTo(buffer, PropertyOffsets.CARATS);
+            BitConverter.GetBytes(EXP).CopyTo(buffer, PropertyOffsets.EXP2);
 
 
             return buffer;

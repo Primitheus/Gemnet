@@ -5,6 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Gemnet.Network.Packets;
 using static Program;
+using Newtonsoft.Json; // Make sure to add a reference to the Newtonsoft.Json library
+
+// Read the JSON data from the file
+
+// Deserialize the JSON data into a list of RoomInfoJson
 
 namespace Gemnet.PacketProcessors
 {
@@ -102,6 +107,30 @@ namespace Gemnet.PacketProcessors
 
         }
 
+        public class RoomInfoJson
+        {
+            public int unknownValue1 { get; set; }
+            public int unknownValue2 { get; set; }
+            public int NumberOfRooms {get; set; }
+            public int unknownValue3 { get; set; }
+            public int unknownValue4 { get; set; }
+            public string RoomMasterIGN { get; set; }
+            public int unknownValue8 { get; set; }
+            public string SomeID { get; set; }
+            public string RoomName { get; set; }
+            public int unknownValue9 { get; set; }
+            public int MaxPlayers { get; set; }
+            public int PlayerNumber { get; set; }
+            public int unknownValue10 { get; set; }
+            public int MatchType { get; set; }
+            public int GameMode { get; set; }
+            public int unknownValue12 { get; set; }
+            public int unknownValue13 { get; set; }
+            public byte[] Time { get; set; }
+            public string Country { get; set; }
+            public string Region { get; set; }
+        }
+
         public static void GetRoomList(ushort type, ushort action, byte[] body)
         {
             action++;
@@ -140,38 +169,37 @@ namespace Gemnet.PacketProcessors
                 one value that controls one property. And one value could actually be two propeties that I mixed into one value.
 
                 */
+                string jsonFilePath = "rooms.json";
+                string jsonData = File.ReadAllText(jsonFilePath);
 
-                response.unknownValue1 = 1;
-                response.unknownValue2 = 1;
-                response.unknownValue3 = 1;
-                response.unknownValue4 = 8;
-                response.unknownValue5 = 1;
-                response.unknownValue6 = 1;
-                response.unknownValue7 = 308; // Might actually be a string, though unlikely.
+                List<RoomInfoJson> roomInfoJsonList = JsonConvert.DeserializeObject<List<RoomInfoJson>>(jsonData);
 
-                response.RoomMasterIGN = "Gemnet";
-
-                response.unknownValue8 = 9;
-
-                response.SomeID = "31"; // Seems to always be 31 needs further testing.
-                response.RoomName = "Example Room";
-
-                response.unknownValue9 = 67;
-
-                response.MaxPlayers = 99;
-                response.PlayerNumber = 99;
-
-                response.unknownValue10 = 343;
-
-                response.MatchType = 257; // 257 = team, 1 = single. Might need adjust property ends or begins (offsets)
-                response.GameMode = 259; // Might need to adjust where the offsets.
-
-                response.unknownValue12 = 1;
-                response.unknownValue13 = 1;
-
-                response.Time = someData; // It is not time
-                response.Country = "GB";
-                response.Region = "EU";
+                foreach (var roomJson in roomInfoJsonList)
+                {
+                    response.Rooms.Add(new RoomInfo
+                    {
+                        unknownValue1 = roomJson.unknownValue1,
+                        unknownValue2 = roomJson.unknownValue2,
+                        NumberOfRooms = roomJson.NumberOfRooms,
+                        unknownValue3 = roomJson.unknownValue3,
+                        unknownValue4 = roomJson.unknownValue4,
+                        RoomMasterIGN = roomJson.RoomMasterIGN,
+                        unknownValue8 = roomJson.unknownValue8,
+                        SomeID = roomJson.SomeID,
+                        RoomName = roomJson.RoomName,
+                        unknownValue9 = roomJson.unknownValue9,
+                        MaxPlayers = roomJson.MaxPlayers,
+                        PlayerNumber = roomJson.PlayerNumber,
+                        unknownValue10 = roomJson.unknownValue10,
+                        MatchType = roomJson.MatchType,
+                        GameMode = roomJson.GameMode,
+                        unknownValue12 = roomJson.unknownValue12,
+                        unknownValue13 = roomJson.unknownValue13,
+                        Time = roomJson.Time,
+                        Country = roomJson.Country,
+                        Region = roomJson.Region
+                    });
+                }
 
                 _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
 
@@ -205,8 +233,6 @@ namespace Gemnet.PacketProcessors
             response.unknownvalue3 = request.unknown12;
 
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
-
-
 
         }
 

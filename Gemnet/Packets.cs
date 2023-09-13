@@ -15,7 +15,8 @@ namespace Gemnet.Packets.Enums
             GENERAL = 0x30,
             INVENTORY = 0x31,
             GAMEGUARD = 0x48,
-            QUERY = 0x40
+            QUERY = 0x40,
+            UNKNOWN = 0x33
         }
 
         public enum ActionLogin
@@ -78,8 +79,8 @@ namespace Gemnet.Packets.Enums
             UNKNOWN_9 = 0xa4,
             GET_ROOM = 0x84,
             CREATE_ROOM = 0x86,
-            JOIN_ROOM_1 = 0x80,
-            JOIN_ROOM_2 = 0x88,
+            JOIN_ROOM = 0x80,
+            JOIN_ROOM_GET_PLAYERS = 0x88,
             USER_READY = 0x60,
             LEAVE_ROOM = 0x82,
             CHANGE_MAP = 0xa8,

@@ -247,10 +247,10 @@ namespace SendPacket
                            // Process CREATE_ROOM action
                     Query.CreateRoom(type, action, packetBody);
                     break;
-                case ActionQuery.JOIN_ROOM_1: // ACTION.JOIN_ROOM_1
+                case ActionQuery.JOIN_ROOM: // ACTION.JOIN_ROOM_1
                            // Process JOIN_ROOM_1 action
                     break;
-                case ActionQuery.JOIN_ROOM_2: // ACTION.JOIN_ROOM_2
+                case ActionQuery.JOIN_ROOM_GET_PLAYERS: // ACTION.JOIN_ROOM_2
                            // Process JOIN_ROOM_2 action
                     break;
                 case ActionQuery.USER_READY: // ACTION.USER_READY
