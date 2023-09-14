@@ -49,20 +49,22 @@ namespace Gemnet.Network.Packets
 
     public class CreateRoomReq : HeaderPacket 
     {
-        public int unkownvalue1 {get; set;}
-        public int unkownvalue2 {get; set;}
+        public int unknownvalue1 {get; set;} //0x08
+        public int unknownvalue2 {get; set;} // goes into unknownValue5
         public string SomeID {get; set;}
         public int unknownvalue3 {get; set;}
-        public string SomeID2 {get; set;}
         public string RoomName {get; set;}
-        public string Password {get; set;}
-        public int unknownvalue4 {get; set;}
+        public int unknownvalue4 {get; set;} //goes into unknownValue6 password protected or not
         public int MaxPlayers {get; set;}
         public int PlayerNumber {get; set;}
+        public int unknownvalue5 {get; set;} //goes into unknownValue7
         public int MatchType {get; set;}
+        public int unknownvalue6 {get; set;} //goes into unknownValue9
+        public int unknownvalue7 {get; set;} //goes into unknownValue10
+        public int RoundNumber {get; set;}
         public int GameMode {get; set;}
-        public int unknownvalue5 {get; set;}
-        public int unknownvalue6 {get; set;}
+        public int unknownvalue8 {get; set;} //goes into unknownValue11
+        public int unknownvalue9 {get; set;} //goes into unknownValue12
 
         private struct PropertyOffsets
         {
@@ -70,16 +72,18 @@ namespace Gemnet.Network.Packets
             public static readonly int unkownvalue2 = 8;
             public static readonly int SomeID = 12;
             public static readonly int unknownvalue3 = 50;
-            public static readonly int SomeID2 = 54;
             public static readonly int RoomName = 60;
-            public static readonly int Password = 86;
             public static readonly int unknownvalue4 = 100;
             public static readonly int MaxPlayers = 101;
             public static readonly int PlayerNumber = 102;
-            public static readonly int MatchType = 104;
-            public static readonly int GameMode = 108;
-            public static readonly int unknownvalue5 = 113;
-            public static readonly int unknownvalue6 = 117;
+            public static readonly int unknownvalue5 = 104;
+            public static readonly int MatchType = 105;
+            public static readonly int unknownvalue6 = 106;
+            public static readonly int unknownvalue7 = 107;
+            public static readonly int RoundNumber = 108;
+            public static readonly int GameMode = 109;
+            public static readonly int unknownvalue8 = 113;
+            public static readonly int unknownvalue9 = 117;
 
         }
         public new static CreateRoomReq Deserialize(byte[] data)
@@ -92,37 +96,34 @@ namespace Gemnet.Network.Packets
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            packet.unkownvalue1 = BitConverter.ToInt32(data, PropertyOffsets.unkownvalue1); // seems to always be 0x8c not sure.
-            packet.unkownvalue2 = BitConverter.ToInt32(data, PropertyOffsets.unkownvalue2); 
+            packet.unknownvalue1 = BitConverter.ToInt32(data, PropertyOffsets.unkownvalue1);
+            packet.unknownvalue2 = BitConverter.ToInt32(data, PropertyOffsets.unkownvalue2); 
+
             packet.SomeID = Encoding.ASCII.GetString(data, PropertyOffsets.SomeID, 4); // again, probably the p2p room id?
             nullTerminator = packet.SomeID.IndexOf('\x00');
             packet.SomeID = packet.SomeID.Remove(nullTerminator);
-            packet.unknownvalue3 = BitConverter.ToInt32(data, PropertyOffsets.unknownvalue3); 
 
-            packet.SomeID2 = Encoding.ASCII.GetString(data, PropertyOffsets.SomeID2, 4);
-            nullTerminator = packet.SomeID2.IndexOf('\x00');
-            packet.SomeID2 = packet.SomeID2.Remove(nullTerminator);
+            packet.unknownvalue3 = Convert.ToInt32(data[PropertyOffsets.unknownvalue3]);
 
             packet.RoomName = Encoding.ASCII.GetString(data, PropertyOffsets.RoomName, 32);
             nullTerminator = packet.RoomName.IndexOf('\x00');
             packet.RoomName = packet.RoomName.Remove(nullTerminator);
-
-            packet.Password = Encoding.ASCII.GetString(data, PropertyOffsets.Password, 14);
-            nullTerminator = packet.Password.IndexOf('\x00');
-            packet.Password = packet.Password.Remove(nullTerminator);
             
-            packet.unknownvalue4 = BitConverter.ToInt32(data, PropertyOffsets.unknownvalue4); 
+            packet.unknownvalue4 = Convert.ToInt32(data[PropertyOffsets.unknownvalue4]);
+            packet.MaxPlayers = Convert.ToInt32(data[PropertyOffsets.MaxPlayers]);; 
+            packet.PlayerNumber =  Convert.ToInt32(data[PropertyOffsets.PlayerNumber]);
 
-            packet.MaxPlayers = BitConverter.ToInt32(data, PropertyOffsets.MaxPlayers); 
-            packet.PlayerNumber = BitConverter.ToInt32(data, PropertyOffsets.PlayerNumber); 
+            packet.unknownvalue5 = Convert.ToInt32(data[PropertyOffsets.unknownvalue5]);
 
-            packet.MatchType = BitConverter.ToInt32(data, PropertyOffsets.MatchType); 
-            packet.GameMode = BitConverter.ToInt32(data, PropertyOffsets.GameMode); 
+            packet.MatchType = Convert.ToInt32(data[PropertyOffsets.MatchType]);
 
-            packet.unknownvalue5 = BitConverter.ToInt32(data, PropertyOffsets.unknownvalue5); 
-            packet.unknownvalue6 = BitConverter.ToInt32(data, PropertyOffsets.unknownvalue6); 
+            packet.unknownvalue6 = Convert.ToInt32(data[PropertyOffsets.unknownvalue6]);
+            packet.unknownvalue7 = Convert.ToInt32(data[PropertyOffsets.unknownvalue7]);
 
+            packet.GameMode = Convert.ToInt32(data[PropertyOffsets.GameMode]);
 
+            packet.unknownvalue8 = Convert.ToInt32(data[PropertyOffsets.unknownvalue8]);
+            packet.unknownvalue9 = Convert.ToInt32(data[PropertyOffsets.unknownvalue9]);
 
             return packet;
         }
@@ -227,24 +228,29 @@ namespace Gemnet.Network.Packets
 
     public class RoomInfo
     {
-        public int unknownValue1 {get; set; }
-        public int unknownValue2 {get; set; }
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
         public int NumberOfRooms {get; set;}
-        public int unknownValue3 {get; set; }
-        public int unknownValue4 {get; set; } 
+        public int unknownValue3 {get; set;}
+        public int unknownValue4 {get; set;}
         public string RoomMasterIGN {get; set;}
-        public int unknownValue8 {get; set; }
+        public int unknownValue5 {get; set;}
         public string SomeID {get; set;}
         public string RoomName {get; set;}
-        public int unknownValue9 {get; set; }
-        public int PlayerNumber {get; set; }
-        public int MaxPlayers {get; set; }
-        public int unknownValue10 {get; set; }
-        public int MatchType {get; set; } //Single or Team
-        public int GameMode {get; set; }
-        public int unknownValue12 {get; set; }
-        public int unknownValue13 {get; set; }
-        public byte[] Time { get; set; }
+        public int unknownValue6 {get; set;}
+        public int MaxPlayers {get; set;}
+        public int PlayerNumber {get; set;}
+        public int GameState {get; set;}
+        public int unknownValue7 {get; set;}
+        public int MatchType {get; set;}
+        public int unknownValue8 {get; set;}
+        public int unknownValue9 {get; set;}
+        public int unknownValue10 {get; set;}
+        public int RoundNumber {get; set;}
+        public int GameMode {get; set;}
+        public int unknownValue11 {get; set;}
+        public int unknownValue12 {get; set;}
+        public byte[] Time {get; set;}
         public string Country {get; set;}
         public string Region {get; set;}
 
@@ -263,17 +269,22 @@ namespace Gemnet.Network.Packets
         public static readonly int unknownValue3 = 20;
         public static readonly int unknownValue4 = 26;
         public static readonly int RoomMasterIGN = 30;
-        public static readonly int unknownValue8 = 50;
+        public static readonly int unknownValue5 = 50;
         public static readonly int SomeID = 54;
         public static readonly int RoomName = 86;
-        public static readonly int unknownValue9 = 126;
+        public static readonly int unknownValue6 = 126;
         public static readonly int MaxPlayers = 127;
         public static readonly int PlayerNumber = 128;
-        public static readonly int unknownValue10 = 129;
-        public static readonly int MatchType = 132;
-        public static readonly int GameMode = 136;
-        public static readonly int unknownValue12 = 141;
-        public static readonly int unknownValue13 = 145;
+        public static readonly int GameState = 129;
+        public static readonly int unknownValue7 = 130;
+        public static readonly int MatchType = 131;
+        public static readonly int unknownValue8 = 133;
+        public static readonly int unknownValue9 = 134;
+        public static readonly int unknownValue10 = 135;
+        public static readonly int RoundNumber = 136;
+        public static readonly int GameMode = 137;
+        public static readonly int unknownValue11 = 141;
+        public static readonly int unknownValue12 = 145;
         public static readonly int Time = 191;
         public static readonly int Country = 199;
         public static readonly int Region = 207;
@@ -304,22 +315,30 @@ namespace Gemnet.Network.Packets
                 if (i == 0) {
                 BitConverter.GetBytes(room.unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1+i);
                 BitConverter.GetBytes(room.unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2+i);
-                BitConverter.GetBytes(room.NumberOfRooms).CopyTo(buffer, PropertyOffsets.NumberOfRooms+i);
+                BitConverter.GetBytes(Rooms.Count).CopyTo(buffer, PropertyOffsets.NumberOfRooms+i);
                 }
                
                 BitConverter.GetBytes(room.unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3+i);
                 BitConverter.GetBytes(room.unknownValue4).CopyTo(buffer, PropertyOffsets.unknownValue4+i);
                 Encoding.ASCII.GetBytes(room.RoomMasterIGN).CopyTo(buffer, PropertyOffsets.RoomMasterIGN+i);
-                BitConverter.GetBytes(room.unknownValue8).CopyTo(buffer, PropertyOffsets.unknownValue8+i);
+                BitConverter.GetBytes(room.unknownValue5).CopyTo(buffer, PropertyOffsets.unknownValue5+i);
                 Encoding.ASCII.GetBytes(room.SomeID).CopyTo(buffer, PropertyOffsets.SomeID+i);
                 Encoding.ASCII.GetBytes(room.RoomName).CopyTo(buffer, PropertyOffsets.RoomName+i);
-                BitConverter.GetBytes(room.unknownValue9).CopyTo(buffer, PropertyOffsets.unknownValue9+i);
+                BitConverter.GetBytes(room.unknownValue6).CopyTo(buffer, PropertyOffsets.unknownValue6+i);
                 BitConverter.GetBytes(room.MaxPlayers).CopyTo(buffer, PropertyOffsets.MaxPlayers+i);
                 BitConverter.GetBytes(room.PlayerNumber).CopyTo(buffer, PropertyOffsets.PlayerNumber+i);
+                BitConverter.GetBytes(room.GameState).CopyTo(buffer, PropertyOffsets.GameState+i);
+                BitConverter.GetBytes(room.unknownValue7).CopyTo(buffer, PropertyOffsets.unknownValue7+i);
                 BitConverter.GetBytes(room.MatchType).CopyTo(buffer, PropertyOffsets.MatchType+i);
+                                     
+                BitConverter.GetBytes(room.unknownValue8).CopyTo(buffer, PropertyOffsets.unknownValue8+i);
+                BitConverter.GetBytes(room.unknownValue9).CopyTo(buffer, PropertyOffsets.unknownValue9+i);
+                BitConverter.GetBytes(room.unknownValue10).CopyTo(buffer, PropertyOffsets.unknownValue10+i);
+
                 BitConverter.GetBytes(room.GameMode).CopyTo(buffer, PropertyOffsets.GameMode+i);
-                BitConverter.GetBytes(room.unknownValue12).CopyTo(buffer, PropertyOffsets.unknownValue12+i);
-                BitConverter.GetBytes(room.unknownValue13).CopyTo(buffer, PropertyOffsets.unknownValue13+i); 
+                
+                BitConverter.GetBytes(room.unknownValue11).CopyTo(buffer, PropertyOffsets.unknownValue11+i);
+                BitConverter.GetBytes(room.unknownValue12).CopyTo(buffer, PropertyOffsets.unknownValue12+i); 
                 room.Time.CopyTo(buffer, PropertyOffsets.Time+i);
                 Encoding.ASCII.GetBytes(room.Country).CopyTo(buffer, PropertyOffsets.Country+i);
                 Encoding.ASCII.GetBytes(room.Region).CopyTo(buffer, PropertyOffsets.Region+i);

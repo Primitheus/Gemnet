@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Gemnet.Network.Packets;
 using static Program;
-using Newtonsoft.Json; // Make sure to add a reference to the Newtonsoft.Json library
+using Newtonsoft.Json;
+using System.Globalization; // Make sure to add a reference to the Newtonsoft.Json library
 
 // Read the JSON data from the file
 
@@ -54,7 +55,50 @@ namespace Gemnet.PacketProcessors
             action++;
             CreateRoomReq request = CreateRoomReq.Deserialize(body);
 
-            Console.WriteLine($"Create Room: Name='{request.RoomName}', ID1='{request.SomeID}', ID2='{request.SomeID2}', {request.unkownvalue1}, {request.unkownvalue2}");
+            Console.WriteLine($"Create Room: Name='{request.RoomName}', ID='{request.SomeID}', MatchType='{request.MatchType}', GameMode='{request.GameMode}'");
+
+            string jsonFilePath = "rooms.json";
+            string jsonData = File.ReadAllText(jsonFilePath);
+            List<RoomInfoJson> roomInfoJsonList = JsonConvert.DeserializeObject<List<RoomInfoJson>>(jsonData);
+            byte[] someData = { 0xb8, 0xfd, 0x7f, 0x02, 0xd8, 0x8c, 0x0d, 0x01 };
+
+            // Create a new RoomInfoJson object or update an existing one
+            RoomInfoJson newRoom = new RoomInfoJson
+            {
+                unknownValue1 = 1,
+                unknownValue2 = 1,
+                unknownValue3 = 1,
+                unknownValue4 = 1,
+                RoomMasterIGN = "Nimonix",
+                unknownValue5 = request.unknownvalue2,
+                SomeID = request.SomeID,
+                RoomName = request.RoomName,
+                unknownValue6 = request.unknownvalue4,
+                MaxPlayers = request.MaxPlayers,
+                PlayerNumber = request.PlayerNumber,
+                GameState = 87,
+                unknownValue7 = request.unknownvalue5,
+                MatchType = request.MatchType,
+                unknownValue8 = 1,
+                unknownValue9 = request.unknownvalue6,
+                unknownValue10 = request.unknownvalue7,
+                RoundNumber =  request.RoundNumber,
+                GameMode = request.GameMode,
+                unknownValue11 = request.unknownvalue8,
+                unknownValue12 =request.unknownvalue9,
+                Time = someData,
+                Country = "GB",
+                Region = "EU",
+
+            };
+
+            roomInfoJsonList.Add(newRoom);
+
+            // Serialize the updated list back to JSON
+            string updatedJsonData = JsonConvert.SerializeObject(roomInfoJsonList, Formatting.Indented);
+
+            // Write the JSON data back to rooms.json
+            File.WriteAllText(jsonFilePath, updatedJsonData);
 
             CreateRoomRes response = new CreateRoomRes();
 
@@ -109,26 +153,30 @@ namespace Gemnet.PacketProcessors
 
         public class RoomInfoJson
         {
-            public int unknownValue1 { get; set; }
-            public int unknownValue2 { get; set; }
-            public int NumberOfRooms {get; set; }
-            public int unknownValue3 { get; set; }
-            public int unknownValue4 { get; set; }
-            public string RoomMasterIGN { get; set; }
-            public int unknownValue8 { get; set; }
-            public string SomeID { get; set; }
-            public string RoomName { get; set; }
-            public int unknownValue9 { get; set; }
-            public int MaxPlayers { get; set; }
-            public int PlayerNumber { get; set; }
-            public int unknownValue10 { get; set; }
-            public int MatchType { get; set; }
-            public int GameMode { get; set; }
-            public int unknownValue12 { get; set; }
-            public int unknownValue13 { get; set; }
-            public byte[] Time { get; set; }
-            public string Country { get; set; }
-            public string Region { get; set; }
+            public int unknownValue1 {get; set;}
+            public int unknownValue2 {get; set;}
+            public int unknownValue3 {get; set;}
+            public int unknownValue4 {get; set;}
+            public string RoomMasterIGN {get; set;}
+            public int unknownValue5 {get; set;}
+            public string SomeID {get; set;}
+            public string RoomName {get; set;}
+            public int unknownValue6 {get; set;}
+            public int MaxPlayers {get; set;}
+            public int PlayerNumber {get; set;}
+            public int GameState {get; set;}
+            public int unknownValue7 {get; set;}
+            public int MatchType {get; set;}
+            public int unknownValue8 {get; set;}
+            public int unknownValue9 {get; set;}
+            public int unknownValue10 {get; set;}
+            public int RoundNumber {get; set;}
+            public int GameMode {get; set;}
+            public int unknownValue11 {get; set;}
+            public int unknownValue12 {get; set;}
+            public byte[] Time {get; set;}
+            public string Country {get; set;}
+            public string Region {get; set;}
         }
 
         public static void GetRoomList(ushort type, ushort action, byte[] body)
@@ -168,7 +216,19 @@ namespace Gemnet.PacketProcessors
                 The guesses could very well be inccorect, for example two values could actually be 
                 one value that controls one property. And one value could actually be two propeties that I mixed into one value.
 
+                GameModes
+                    - Classic Battle: 259
+                    - Battle: 66305
+                    - Hyper Battle: 66306
+                    - Boss Mode: 33620225
+                    - Moving Screen: 84082945
+                    - King of The Kill: 67305729
+                    - Potion Battle: 100860161
+                    - Caged Beast: 117637377
+                    - Arena: 50528513
+
                 */
+
                 string jsonFilePath = "rooms.json";
                 string jsonData = File.ReadAllText(jsonFilePath);
 
@@ -180,24 +240,28 @@ namespace Gemnet.PacketProcessors
                     {
                         unknownValue1 = roomJson.unknownValue1,
                         unknownValue2 = roomJson.unknownValue2,
-                        NumberOfRooms = roomJson.NumberOfRooms,
                         unknownValue3 = roomJson.unknownValue3,
                         unknownValue4 = roomJson.unknownValue4,
                         RoomMasterIGN = roomJson.RoomMasterIGN,
-                        unknownValue8 = roomJson.unknownValue8,
+                        unknownValue5 = roomJson.unknownValue5,
                         SomeID = roomJson.SomeID,
                         RoomName = roomJson.RoomName,
-                        unknownValue9 = roomJson.unknownValue9,
+                        unknownValue6 = roomJson.unknownValue6,
                         MaxPlayers = roomJson.MaxPlayers,
                         PlayerNumber = roomJson.PlayerNumber,
-                        unknownValue10 = roomJson.unknownValue10,
+                        GameState = roomJson.GameState,
+                        unknownValue7 = roomJson.unknownValue7,
                         MatchType = roomJson.MatchType,
+                        unknownValue8 = roomJson.unknownValue8,
+                        unknownValue9 = roomJson.unknownValue9,
+                        unknownValue10 = roomJson.unknownValue10,
+                        RoundNumber = roomJson.RoundNumber,
                         GameMode = roomJson.GameMode,
+                        unknownValue11 = roomJson.unknownValue11,
                         unknownValue12 = roomJson.unknownValue12,
-                        unknownValue13 = roomJson.unknownValue13,
-                        Time = roomJson.Time,
+                        Time = someData,
                         Country = roomJson.Country,
-                        Region = roomJson.Region
+                        Region = roomJson.Region,
                     });
                 }
 
