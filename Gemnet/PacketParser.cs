@@ -249,9 +249,11 @@ namespace SendPacket
                     break;
                 case ActionQuery.JOIN_ROOM: // ACTION.JOIN_ROOM_1
                            // Process JOIN_ROOM_1 action
+                    Query.JoinRoom(type, action, packetBody);
                     break;
                 case ActionQuery.JOIN_ROOM_GET_PLAYERS: // ACTION.JOIN_ROOM_2
                            // Process JOIN_ROOM_2 action
+                    Query.JoinGetPlayers(type, action, packetBody);
                     break;
                 case ActionQuery.USER_READY: // ACTION.USER_READY
                            // Process USER_READY action
