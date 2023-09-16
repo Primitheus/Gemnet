@@ -7,6 +7,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using static Program;
@@ -15,7 +16,7 @@ namespace Gemnet.PacketProcessors
 {
     internal class Inventory
     {
-        public static void GetCash(ushort type, ushort action, byte[] body)
+        public static void GetCash(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
 
             action++;
@@ -33,10 +34,10 @@ namespace Gemnet.PacketProcessors
 
             byte[] packet = response.Serialize();
 
-            _ = ServerHolder.ServerInstance.SendPacket(packet);
+            _ = ServerHolder.ServerInstance.SendPacket(packet, stream);
         }
 
-        public static void BuyItem(ushort type, ushort action, byte[] body) 
+        public static void BuyItem(ushort type, ushort action, byte[] body, NetworkStream stream) 
         {
             action++;
 
@@ -75,7 +76,7 @@ namespace Gemnet.PacketProcessors
                     response.ServerID = ServerID.ServerID;
                     response.Carats = 5000000;
 
-                    _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
+                    _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
                 }
 
@@ -86,7 +87,7 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public static void OpenBox(ushort type, ushort action, byte[] body)
+        public static void OpenBox(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
 
@@ -122,7 +123,7 @@ namespace Gemnet.PacketProcessors
             response.ItemID = itemid;
             response.ItemEnd = itemend;
 
-            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
         }
 

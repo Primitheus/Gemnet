@@ -4,6 +4,8 @@ using System.Net;
 using System.IO;
 using System;
 using Gemnet.Packets;
+using System.Collections.Concurrent;
+
 using static Gemnet.Packets.Enums.Packets;
 public class Server
 {
@@ -14,15 +16,13 @@ public class Server
     private const int ActionOffset = 4;
 
     private TcpListener tcpListener;
+    private ConcurrentBag<TcpClient> clients = new ConcurrentBag<TcpClient>();
 
     Parser parser = new Parser();
-
-    NetworkStream stream;
 
     public Server(IPAddress ipAddress, int port)
     {
         tcpListener = new TcpListener(ipAddress, port);
-
 
     }
 
@@ -35,7 +35,7 @@ public class Server
         while (true)
         {
             TcpClient client = await tcpListener.AcceptTcpClientAsync();
-            stream = client.GetStream();
+            clients.Add(client);
             _ = ProcessClient(client); // Start processing client asynchronously
         }
     }
@@ -44,7 +44,8 @@ public class Server
     {
         try
         {
-            Console.WriteLine($"Client connected: {client.Client.RemoteEndPoint}");
+            var stream = client.GetStream();
+            Console.WriteLine($"Client connected: {((IPEndPoint)client.Client.RemoteEndPoint).ToString()}");
 
 
             byte[] buffer = new byte[MaxBufferSize];
@@ -52,7 +53,7 @@ public class Server
 
             while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
             {
-                await ParsePackets(buffer, bytesRead);
+                await ParsePackets(buffer, bytesRead, stream);
             }
         }
         catch (Exception ex)
@@ -61,12 +62,13 @@ public class Server
         }
         finally
         {
+            clients.TryTake(out client);
             client.Close();
             Console.WriteLine($"Client disconnected: {client.Client.RemoteEndPoint}");
         }
     }
 
-    private async Task ParsePackets(byte[] buffer, int bytesRead)
+    private async Task ParsePackets(byte[] buffer, int bytesRead, NetworkStream stream)
     {
 
         int offset = 0;
@@ -95,8 +97,8 @@ public class Server
             Buffer.BlockCopy(buffer, offset + PacketHeaderSize, packetBody, 0, length);
 
             // Process the packet (type, action, packetBody)
-            // ProcessPacket(type, action, packetBody);
-            parser.ProcessPacketAsync(type, action, buffer);
+
+            parser.ProcessPacketAsync(type, action, buffer, stream);
 
             offset += PacketHeaderSize + length;
         }
@@ -107,10 +109,9 @@ public class Server
             Buffer.BlockCopy(buffer, offset, buffer, 0, bytesRead - offset);
         }
 
-
     }
 
-    public async Task SendPacket(ushort type, ushort length, ushort action)
+    public async Task SendPacket(ushort type, ushort length, ushort action, NetworkStream stream)
     {
         String TypeName = Enum.GetName((HeaderType)type);
 
@@ -127,7 +128,7 @@ public class Server
         Console.WriteLine($"Sent Packet: Type={TypeName}, Action={action:X2}, Length={length}");
     }
 
-    public async Task SendPacket(ushort type, ushort length, ushort action, byte[] data)
+    public async Task SendPacket(ushort type, ushort length, ushort action, byte[] data, NetworkStream stream)
     {
         String TypeName = Enum.GetName((HeaderType)type);
 
@@ -150,7 +151,7 @@ public class Server
         Console.WriteLine($"Sent Packet: Type={TypeName}, Action={action:X2}, Length={length}");
     }
 
-    public async Task SendPacket(byte[] data)
+    public async Task SendPacket(byte[] data, NetworkStream stream)
     {
 
         await stream.WriteAsync(data, 0, data.Length);
@@ -158,7 +159,7 @@ public class Server
         Console.WriteLine($"Sent Packet");
     }
 
-    public async Task SendPacket(byte[] data, int maxBufferSize)
+    public async Task SendPacket(byte[] data, int maxBufferSize, NetworkStream stream)
     {
         int totalLength = data.Length;
         int bytesSent = 0;

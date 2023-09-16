@@ -50,5 +50,31 @@
     "Time": "uP1/AtiMDQE=",
     "Country": "GB",
     "Region": "EU"
+  },
+  {
+    "unknownValue1": 1,
+    "unknownValue2": 1,
+    "unknownValue3": 1,
+    "unknownValue4": 1,
+    "RoomMasterIGN": "Nimonix",
+    "unknownValue5": 12,
+    "SomeID": "53",
+    "RoomName": "8 enter, 1 leaves",
+    "unknownValue6": 79,
+    "MaxPlayers": 8,
+    "PlayerNumber": 1,
+    "GameState": 87,
+    "unknownValue7": 1,
+    "MatchType": 0,
+    "unknownValue8": 1,
+    "unknownValue9": 0,
+    "unknownValue10": 1,
+    "RoundNumber": 0,
+    "GameMode": 1,
+    "unknownValue11": 1,
+    "unknownValue12": 1,
+    "Time": "uP1/AtiMDQE=",
+    "Country": "GB",
+    "Region": "EU"
   }
 ]

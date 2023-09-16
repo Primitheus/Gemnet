@@ -3,6 +3,7 @@ using Gemnet.Network.Header;
 using Gemnet.Network.Packets;
 using Gemnet.Packets.Login;
 using Gemnet.Persistence.Models;
+using System.Net.Sockets;
 using Org.BouncyCastle.Asn1.Ocsp;
 using static Program;
 
@@ -11,17 +12,17 @@ namespace Gemnet.PacketProcessors
 {
     internal class Login
     {
-        public static void VersionCheck(ushort type, ushort action)
+        public static void VersionCheck(ushort type, ushort action, NetworkStream stream)
         {
 
             //Console.WriteLine("[Server] Version Check Successful");
             action++;
-            _ = ServerHolder.ServerInstance.SendPacket(type, 0x6, action);
+            _ = ServerHolder.ServerInstance.SendPacket(type, 0x6, action, stream);
 
 
         }
 
-        public static void CredentialCheck(ushort type, ushort action, byte[] body)
+        public static void CredentialCheck(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
             Console.WriteLine("[Credential Check]");
@@ -48,7 +49,7 @@ namespace Gemnet.PacketProcessors
                 response.Error = "Email or Password is Incorrect.";
                 response.Code = 29374;
 
-                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
+                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
 
             } else {
@@ -65,13 +66,13 @@ namespace Gemnet.PacketProcessors
                 response.Token = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234";
                 response.ForumName = LoginQuery.ForumName;
 
-                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
+                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
             }
 
            
         }
 
-        public static void ServerTime(ushort type, ushort action)
+        public static void ServerTime(ushort type, ushort action, NetworkStream stream)
         {
             action++;
             DateTime now = DateTime.Now;
@@ -88,27 +89,27 @@ namespace Gemnet.PacketProcessors
 
             Console.WriteLine($"[Server Time : {time}] Data={BitConverter.ToString(timeArray)}");
 
-            _ = ServerHolder.ServerInstance.SendPacket(serverTime.Serialize());
+            _ = ServerHolder.ServerInstance.SendPacket(serverTime.Serialize(), stream);
 
         }
 
-        public static void CashUnknown(ushort type, ushort action)
+        public static void CashUnknown(ushort type, ushort action, NetworkStream stream)
         {
             action++;
             byte[] data = { 0x01, 0x00 };
-            _ = ServerHolder.ServerInstance.SendPacket(type, 0x8, action, data);
+            _ = ServerHolder.ServerInstance.SendPacket(type, 0x8, action, data, stream);
 
 
         }
-        public static void GetBuddyList(ushort type, ushort action)
+        public static void GetBuddyList(ushort type, ushort action, NetworkStream stream)
         {
             action++;
             Console.WriteLine($"Get Buddy List");
 
-            _ = ServerHolder.ServerInstance.SendPacket(type, 0x06, action);
+            _ = ServerHolder.ServerInstance.SendPacket(type, 0x06, action, stream);
         }
 
-        public static void TO_LOBBY(ushort type, ushort action, byte[] body) {
+        public static void TO_LOBBY(ushort type, ushort action, byte[] body, NetworkStream stream) {
             action++;
             ToLobbyReq request = ToLobbyReq.Deserialize(body);
             Console.WriteLine($"To Lobby");
@@ -119,7 +120,7 @@ namespace Gemnet.PacketProcessors
 
             response.Result = 1;
 
-            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
         } 
 
     }
