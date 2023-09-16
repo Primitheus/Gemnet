@@ -21,7 +21,7 @@ namespace Gemnet.Network.Packets
         public int UnknownValue4 {get; set;} // goes into UnknownValue4
         public int UnknownValue5 {get; set;} // goes into UnknownValue5
         public int UnknownValue6 {get; set;} // goes into UnknownValue6
-        public int UnknownValue7{get; set;} // goes into UnknownValue7
+        public int UnknownValue7{get; set;} // goes into UnknownValue7 THIS IS THE P2P ID!
         public string SomeID {get; set;}
 
         private struct PropertyOffsets
