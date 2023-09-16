@@ -1,0 +1,32 @@
+[
+    {
+        "unknownValue1": 1,
+        "unknownValue2": 21,
+        "EXP": 55,
+        "IGN": "nProtect",
+        "unknownValue3" : 130,
+        "SomeID": "148",
+        "ItemID": [1000171],
+        "unknownValue4": 78,
+        "unknownValue5": 78,
+        "unknownValue6": 232,
+        "unknownValue7": 3,
+        "Country": "US",
+        "Region": "NA"
+    },
+    {
+        "unknownValue1": 3,
+        "unknownValue2": 0,
+        "EXP": 55,
+        "IGN": "Nimonix",
+        "unknownValue3" : 11,
+        "SomeID": "148",
+        "ItemID": [1000171],
+        "unknownValue4": 78,
+        "unknownValue5": 78,
+        "unknownValue6": 232,
+        "unknownValue7": 3,
+        "Country": "US",
+        "Region": "NA"
+    }
+  ]

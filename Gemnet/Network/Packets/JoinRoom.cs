@@ -165,64 +165,138 @@ namespace Gemnet.Network.Packets
         }
     }
 
+    public class Player
+    {
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+        public int EXP {get; set;}
+        public string IGN { get; set; }
+        public int unknownValue3 {get; set;}
+        public string SomeID {get; set;}
+        public int[] ItemID { get; set; }
+        public int unknownValue4 {get; set;}
+        public int unknownValue5 {get; set;}
+        public int unknownValue6 {get; set;}
+        public int unknownValue7 {get; set;}
+        public string Country {get; set;}
+        public string Region {get; set;}
+
+    }
+
+    public class GetPlayersReq : HeaderPacket
+
+    {
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+
+        public struct PropertyOffsets
+        {
+            public static readonly int unknownValue1 = 6;
+            public static readonly int unknownValue2 = 10;
+        }
+        public new static GetPlayersReq Deserialize(byte[] data)
+        {
+            GetPlayersReq packet = new GetPlayersReq();
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.unknownValue1 = Convert.ToInt32(data[PropertyOffsets.unknownValue1]);
+            packet.unknownValue2 = Convert.ToInt32(data[PropertyOffsets.unknownValue2]);
+           
+
+            return packet;
+        }
+
+
+    }
+
     public class GetPlayersRes : HeaderPacket
     {
         public int unknownValue1 {get; set;}
         public int unknownValue2 {get; set;}
         public int unknownValue3 {get; set;}
-        public int unknownValue4 {get; set;}
-        public int unknownValue5 {get; set;}
-        public int unknownValue6 {get; set;}
-        public string UserIGN {get; set;}
-        public int unknownValue7 {get; set;}
-        public string SomeID {get; set;}
-        public int[] ItemID { get; set; }
- 
+        public int PlayerNumber {get; set;}
+        public List<Player> Players {get; set;}
         
         private struct PropertyOffsets
         {
             public static readonly int unknownValue1 = 6;
             public static readonly int unknownValue2 = 8;
             public static readonly int unknownValue3 = 12;
-            public static readonly int unknownValue4 = 14;
-            public static readonly int unknownValue5 = 16;
-            public static readonly int unknownValue6 = 18;
-            public static readonly int UserIGN = 26;
-            public static readonly int unknownValue7 = 48;
-            public static readonly int SomeID = 52;
-            public static readonly int ItemID = 84;
+            public static readonly int PlayerNumber = 14;
+            public static readonly int Player = 16;
 
         }
 
+        private struct PlayerPropertyOffsets 
+        {
+            public static readonly int unknownValue1 = 0;
+            public static readonly int unknownValue2 = 2;
+            public static readonly int EXP = 6;
+            public static readonly int IGN = 10; 
+            public static readonly int unknownValue3 = 32;
+            public static readonly int SomeID = 36;
+            public static readonly int ItemID = 68;
+            public static readonly int unknownValue4 = 1515;
+            public static readonly int unknownValue5 = 1516;
+            public static readonly int unknownValue6 = 1538;
+            public static readonly int unknownValue7 = 1539;
+            public static readonly int Country = 1554;
+            public static readonly int Region = 1562;
+
+
+        }
         public override byte[] Serialize()
         {
+            Console.WriteLine($"Serialize Player Data Begin");
 
-            byte[] buffer = new byte[2880];
+            byte[] buffer = new byte[PlayerNumber*1562 + 16 + 2000];
             Size = (ushort)buffer.Length;
 
             int offset = 0;
+            var i = 16;
+            var j = 0;
+
             base.Serialize().CopyTo(buffer, offset);
 
             BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
             BitConverter.GetBytes(unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2);
             BitConverter.GetBytes(unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3);
-            BitConverter.GetBytes(unknownValue4).CopyTo(buffer, PropertyOffsets.unknownValue4);
-            BitConverter.GetBytes(unknownValue5).CopyTo(buffer, PropertyOffsets.unknownValue5);
-            BitConverter.GetBytes(unknownValue6).CopyTo(buffer, PropertyOffsets.unknownValue6);
-            Encoding.ASCII.GetBytes(UserIGN).CopyTo(buffer, PropertyOffsets.UserIGN);
-            BitConverter.GetBytes(unknownValue7).CopyTo(buffer, PropertyOffsets.unknownValue7);
-            Encoding.ASCII.GetBytes(SomeID).CopyTo(buffer, PropertyOffsets.SomeID);
-
-            var i = 0;
-            foreach (var item in ItemID) 
-            {
-
-                BitConverter.GetBytes(item).CopyTo(buffer, PropertyOffsets.ItemID+i);
-                i += 4;
-
-            }
-
+            BitConverter.GetBytes(PlayerNumber).CopyTo(buffer, PropertyOffsets.PlayerNumber);
             
+            Console.WriteLine($"Serialize Player Data");
+            
+            foreach (var player in Players) 
+            {
+                Console.WriteLine($"Adding Player: {player.IGN}.");
+                BitConverter.GetBytes(player.unknownValue1).CopyTo(buffer, PlayerPropertyOffsets.unknownValue1+i);
+                BitConverter.GetBytes(player.unknownValue2).CopyTo(buffer, PlayerPropertyOffsets.unknownValue2+i);
+                BitConverter.GetBytes(player.EXP).CopyTo(buffer, PlayerPropertyOffsets.EXP+i);
+                Encoding.ASCII.GetBytes(player.IGN).CopyTo(buffer, PlayerPropertyOffsets.IGN+i);
+                BitConverter.GetBytes(player.unknownValue3).CopyTo(buffer, PlayerPropertyOffsets.unknownValue3+i);
+                Encoding.ASCII.GetBytes(player.SomeID).CopyTo(buffer, PlayerPropertyOffsets.SomeID+i);
+
+                foreach (var item in player.ItemID) 
+                {
+                    Console.WriteLine($"Adding Item: {item}");
+                    BitConverter.GetBytes(item).CopyTo(buffer, PlayerPropertyOffsets.ItemID+j);
+                    j += 4;
+                }
+
+                BitConverter.GetBytes(player.unknownValue4).CopyTo(buffer, PlayerPropertyOffsets.unknownValue4+i);
+                BitConverter.GetBytes(player.unknownValue5).CopyTo(buffer, PlayerPropertyOffsets.unknownValue5+i);
+                BitConverter.GetBytes(player.unknownValue6).CopyTo(buffer, PlayerPropertyOffsets.unknownValue6+i);
+                BitConverter.GetBytes(player.unknownValue7).CopyTo(buffer, PlayerPropertyOffsets.unknownValue7+i);
+                Encoding.ASCII.GetBytes(player.Country).CopyTo(buffer, PlayerPropertyOffsets.Country+i);
+                Encoding.ASCII.GetBytes(player.Region).CopyTo(buffer, PlayerPropertyOffsets.Region+i);
+                i += 1594;
+
+            } 
+
+            Console.WriteLine("Finished Adding Players");
+          
 
             return buffer;
         }
