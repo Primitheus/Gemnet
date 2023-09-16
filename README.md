@@ -12,14 +12,13 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Training
     * Boss Mode
     * Survival
-      
+    * EXP/CARAT Rewards
+
 
 - In Progress
     * Lobby
     * Create/Join Rooms
-    * Opening Boxes/Packages
-    * Medal Shop
-    * EXP/CARAT Rewards
+
 
 - TODO
     * ProudNet Emulation
@@ -37,7 +36,9 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Plaza
     * Fishing
     * Runes
-
+    * Opening Boxes/Packages
+    * Medal Shop
+      
 ## Credits
   - Configuration and Persistence Model
     
