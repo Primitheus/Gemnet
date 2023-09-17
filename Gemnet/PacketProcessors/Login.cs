@@ -6,7 +6,7 @@ using Gemnet.Persistence.Models;
 using System.Net.Sockets;
 using Org.BouncyCastle.Asn1.Ocsp;
 using static Program;
-
+using static Server;
 
 namespace Gemnet.PacketProcessors
 {
@@ -65,6 +65,9 @@ namespace Gemnet.PacketProcessors
                 response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
                 response.Token = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234";
                 response.ForumName = LoginQuery.ForumName;
+
+                clientUsernames.Add(stream, response.IGN);
+
 
                 _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
             }

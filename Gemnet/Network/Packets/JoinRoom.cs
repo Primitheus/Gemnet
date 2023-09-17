@@ -1,6 +1,7 @@
 using Gemnet.Network.Header;
 using Microsoft.VisualBasic;
 using MySqlX.XDevAPI.Common;
+using Org.BouncyCastle.Crypto.Prng;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -529,7 +530,7 @@ namespace Gemnet.Network.Packets
         public override byte[] Serialize()
         {
 
-            byte[] buffer = new byte[14];
+            byte[] buffer = new byte[40];
             Size = (ushort)buffer.Length;
 
             int offset = 0;
@@ -548,6 +549,89 @@ namespace Gemnet.Network.Packets
 
         }
 
+
+    }
+
+    public class LoadGameReq : HeaderPacket
+    {
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+        public int unknownValue3 {get; set;}
+        public int unknownValue4 {get; set;}
+
+        private struct PropertyOffsets
+        {
+            public static readonly int unknownValue1 = 6;
+            public static readonly int unknownValue2 = 8;
+            public static readonly int unknownValue3 = 12;
+            public static readonly int unknownValue4 = 16;
+           
+
+        }
+
+        public new static LoadGameReq Deserialize(byte[] data)
+        {
+
+            LoadGameReq packet = new LoadGameReq();
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.unknownValue1 = Convert.ToInt32(data[PropertyOffsets.unknownValue1]);
+            packet.unknownValue2 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue2);
+            packet.unknownValue3 = Convert.ToInt32(data[PropertyOffsets.unknownValue3]);
+            packet.unknownValue4 = Convert.ToInt32(data[PropertyOffsets.unknownValue4]);
+
+            return packet;
+        }
+
+    }
+
+    public class LoadGameRes : HeaderPacket
+    {
+
+        public string IGN {get; set;}
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+        public int unknownValue3 {get; set;}
+        public int unknownValue4 {get; set;}
+
+        public struct PropertyOffsets
+        {
+            public static readonly int IGN = 6;
+            public static readonly int unknownValue1 = 26;
+            public static readonly int unknownValue2 = 28;
+            public static readonly int unknownValue3 = 32;
+            public static readonly int unknownValue4 = 36;
+
+        }
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[80];
+            Size = (ushort)buffer.Length;
+
+            int offset = 0;
+            var i = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+
+            Encoding.ASCII.GetBytes(IGN).CopyTo(buffer, PropertyOffsets.IGN);
+            BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
+            BitConverter.GetBytes(unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2);
+            BitConverter.GetBytes(unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3);
+            BitConverter.GetBytes(unknownValue4).CopyTo(buffer, PropertyOffsets.unknownValue4);
+
+            BitConverter.GetBytes(0).CopyTo(buffer, 30);
+            BitConverter.GetBytes(0).CopyTo(buffer, 31);
+
+            base.Serialize().CopyTo(buffer, offset);
+              
+            return buffer;
+
+        }
 
     }
 }

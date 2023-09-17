@@ -271,8 +271,10 @@ namespace SendPacket
                            // Process CHANGE_MAP action
                     break;
                 case ActionQuery.START_GAME: // ACTION.START_GAME
-                           // Process START_GAME action
-                    Query.StartMatch(type, action, packetBody, stream)
+                    Query.StartMatch(type, action, packetBody, stream);
+                    break;
+                case ActionQuery.LOADING_GAME_1:
+                    Query.LoadGame1(type, action, packetBody, stream);
                     break;
                 case ActionQuery.END_MATCH:
                     Query.GetReward(type, action, packetBody, stream);

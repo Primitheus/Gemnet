@@ -86,6 +86,7 @@ namespace Gemnet.Packets.Enums
             LEAVE_ROOM = 0x82,
             CHANGE_MAP = 0xa8,
             START_GAME = 0x61,
+            LOADING_GAME_1 = 0x43,
             EQUIPPING = 0xa4,
             END_MATCH = 0xb0,
 

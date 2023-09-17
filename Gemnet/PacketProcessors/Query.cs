@@ -512,5 +512,38 @@ namespace Gemnet.PacketProcessors
 
         }
 
+        public static void LoadGame1(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action = 0x15;
+
+            LoadGameReq request = LoadGameReq.Deserialize(body);
+
+            LoadGameRes response = new LoadGameRes();
+
+            response.Action = action;
+            response.Type = 576;
+
+            if (Server.clientUsernames.TryGetValue(stream, out string username))
+            {
+                response.IGN = username;
+            }
+            else
+            {
+                // Handle the case where the username is not found (e.g., set a default value)
+                response.IGN = "UnknownUser";
+            }
+            response.unknownValue1 = request.unknownValue1;
+            response.unknownValue2 = request.unknownValue2;
+            response.unknownValue3 = request.unknownValue3;
+            response.unknownValue4 = request.unknownValue4;
+
+            byte[] data = { 0x02, 0x40, 0x00, 0x28, 0x15, 0x00, 0x4E, 0x69, 0x6D, 0x6F, 0x6E, 0x69, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x0a, 0x90, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x02, 0x40, 0x00, 0x28, 0x15, 0x00, 0x47, 0x65, 0x6D, 0x6E, 0x65, 0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x0a, 0x90, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00};
+
+            Console.WriteLine("Loading 1");
+            bool NOT = true;
+            //_ = ServerHolder.ServerInstance.SendPacket(data, stream, NOT);
+
+        }
+
     }
 }

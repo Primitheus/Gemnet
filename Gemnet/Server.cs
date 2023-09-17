@@ -5,10 +5,11 @@ using System.IO;
 using System;
 using Gemnet.Packets;
 using System.Collections.Concurrent;
-
 using static Gemnet.Packets.Enums.Packets;
 public class Server
 {
+    public static Dictionary<NetworkStream, string> clientUsernames = new Dictionary<NetworkStream, string>();
+
     private const int MaxBufferSize = 1440;
     private const int PacketHeaderSize = 6; // 2 bytes for type + 2 bytes for length + 2 bytes for action
     private const int TypeOffset = 0;
