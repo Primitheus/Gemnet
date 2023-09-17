@@ -1,4 +1,5 @@
 using Gemnet.Network.Header;
+using Microsoft.VisualBasic;
 using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
@@ -245,9 +246,10 @@ namespace Gemnet.Network.Packets
             public static readonly int unknownValue7 = 1539;
             public static readonly int Country = 1554;
             public static readonly int Region = 1562;
-
-
         }
+
+
+
         public override byte[] Serialize()
         {
             Console.WriteLine($"Serialize Player Data Begin");
@@ -302,5 +304,251 @@ namespace Gemnet.Network.Packets
         }
     }
 
+    public class PlayerJoin
+    {
+        public int UserID {get; set;}
+        public string IGN {get; set;}
+        public int unknownValue1 {get; set;}
+        public int EXP {get; set;}
+        public int P2PID {get; set;}
+        public string SomeID {get; set;}
+        public int[] ItemID { get; set; }
+        public int unknownValue2 {get; set;}
+        public int unknownValue3 {get; set;}
+        public int unknownValue4 {get; set;}
+        public int unknownValue5 {get; set;}
+        public int unknownValue6 {get; set;}
+        public int unknownValue7 {get; set;}
+        public int unknownValue8 {get; set;}
+        public string Country {get; set;}
+        public string Region {get; set;}
+
+    }
+    public class UserJoinedRes : HeaderPacket 
+    {
+        public int unknownValue1 {get; set;}
+        public List<PlayerJoin> Players { get; set; }
+
+        private struct PropertyOffsets {
+            public static readonly int unknownValue1 = 6;
+            public static readonly int Players = 8;
+            
+        }
+        private struct PropertyPlayerOffsets
+        {
+            
+            public static readonly int UserID = 0;
+            public static readonly int IGN = 4;
+            public static readonly int unknownValue1 = 24;
+            public static readonly int EXP = 28;
+            public static readonly int P2PID = 32;
+            public static readonly int SomeID = 36;
+            public static readonly int ItemID = 68;
+            public static readonly int unknownValue2 = 1515;
+            public static readonly int unknownValue3 = 1516;
+            public static readonly int unknownValue4 = 1538;
+            public static readonly int unknownValue5 = 1539;
+            public static readonly int unknownValue6 = 1543;
+            public static readonly int unknownValue7 = 1547;
+            public static readonly int unknownValue8 = 1551;
+            public static readonly int Country = 1555;
+            public static readonly int Region = 1563;
+            public static readonly int End = 1594;
+            
+        }
+        public UserJoinedRes()
+        {
+            Players = new List<PlayerJoin>();
+
+        }
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[unknownValue1 * 1594 + 8 + 500];
+            Size = (ushort)buffer.Length;
+
+            int offset = 0;
+            var i = 8;
+            var j = 0;
+            base.Serialize().CopyTo(buffer, offset);
+
+            BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
+
+            foreach (var player in Players) {
+
+                BitConverter.GetBytes(player.UserID).CopyTo(buffer, PropertyPlayerOffsets.UserID+i);
+                Encoding.ASCII.GetBytes(player.IGN).CopyTo(buffer, PropertyPlayerOffsets.IGN+i);
+                BitConverter.GetBytes(player.unknownValue1).CopyTo(buffer, PropertyPlayerOffsets.unknownValue1+i);
+                BitConverter.GetBytes(player.EXP).CopyTo(buffer, PropertyPlayerOffsets.EXP+i);
+                BitConverter.GetBytes(player.P2PID).CopyTo(buffer, PropertyPlayerOffsets.P2PID+i);
+                Encoding.ASCII.GetBytes(player.SomeID).CopyTo(buffer, PropertyPlayerOffsets.SomeID+i);
+
+                foreach(var item in player.ItemID) {
+                    BitConverter.GetBytes(item).CopyTo(buffer, PropertyPlayerOffsets.ItemID+j);
+                    j += 4;
+                }
+
+                BitConverter.GetBytes(player.unknownValue2).CopyTo(buffer, PropertyPlayerOffsets.unknownValue2+i);
+                BitConverter.GetBytes(player.unknownValue3).CopyTo(buffer, PropertyPlayerOffsets.unknownValue3+i);
+                BitConverter.GetBytes(player.unknownValue4).CopyTo(buffer, PropertyPlayerOffsets.unknownValue4+i);
+                BitConverter.GetBytes(player.unknownValue5).CopyTo(buffer, PropertyPlayerOffsets.unknownValue5+i);
+                BitConverter.GetBytes(player.unknownValue6).CopyTo(buffer, PropertyPlayerOffsets.unknownValue6+i);
+                BitConverter.GetBytes(player.unknownValue7).CopyTo(buffer, PropertyPlayerOffsets.unknownValue7+i);
+                BitConverter.GetBytes(player.unknownValue8).CopyTo(buffer, PropertyPlayerOffsets.unknownValue8+i);
+                Encoding.ASCII.GetBytes(player.Country).CopyTo(buffer, PropertyPlayerOffsets.Country+i);
+                Encoding.ASCII.GetBytes(player.Region).CopyTo(buffer, PropertyPlayerOffsets.Region+i);
+                BitConverter.GetBytes(0).CopyTo(buffer, PropertyPlayerOffsets.End+i);
+                i += 1595;
+
+            }
+            
+            return buffer;
+        }
+        
+    }
+
+    public class UserReadyReq : HeaderPacket
+    {
+        public int unknownValue1 {get; set;}
+
+        private struct PropertyOffsets
+        {
+            public static readonly int unknownValue1 = 6;
+
+        }
+
+        public new static UserReadyReq Deserialize(byte[] data)
+        {
+
+            UserReadyReq packet = new UserReadyReq();
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.unknownValue1 = Convert.ToInt32(data[PropertyOffsets.unknownValue1]);
+            
+            return packet;
+        }
+
+    }
+
+
+    public class UserReadyRes : HeaderPacket
+    {
+        public string IGN {get; set;}
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+
+        public struct PropertyOffsets
+        {
+            public static readonly int IGN = 6;
+            public static readonly int unknownValue1 = 26;
+            public static readonly int unknownValue2 = 27;
+
+        }
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[63];
+            Size = (ushort)buffer.Length;
+
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+
+            Encoding.ASCII.GetBytes(IGN).CopyTo(buffer, PropertyOffsets.IGN);
+            BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
+            BitConverter.GetBytes(unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2);
+
+               
+            return buffer;
+
+        }
+    }
+
+    public class StartMatchReq : HeaderPacket
+    {
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+        public int unknownValue3 {get; set;}
+        public int unknownValue4 {get; set;}
+
+
+        private struct PropertyOffsets
+        {
+            public static readonly int unknownValue1 = 6;
+            public static readonly int unknownValue2 = 8;
+            public static readonly int unknownValue3 = 10;
+            public static readonly int unknownValue4 = 12;
+           
+
+        }
+
+        public new static StartMatchReq Deserialize(byte[] data)
+        {
+
+            StartMatchReq packet = new StartMatchReq();
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.unknownValue1 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue1);
+            packet.unknownValue2 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue2);
+            packet.unknownValue3 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue3);
+            packet.unknownValue4 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue4);
+
+            return packet;
+        }
+    }
+
+    public class StartMatchRes : HeaderPacket
+    {
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+        public int unknownValue3 {get; set;}
+        public int unknownValue4 {get; set;}
+        public int unknownValue5 {get; set;}
+        public int unknownValue6 {get; set;}
+
+
+        private struct PropertyOffsets
+        {
+            public static readonly int unknownValue1 = 6;
+            public static readonly int unknownValue2 = 7;
+            public static readonly int unknownValue3 = 10;
+            public static readonly int unknownValue4 = 12;
+            public static readonly int unknownValue5 = 14;
+            public static readonly int unknownValue6 = 16;
+
+        }
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[14];
+            Size = (ushort)buffer.Length;
+
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+
+            BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
+            BitConverter.GetBytes(unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2);
+
+            BitConverter.GetBytes(unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3);
+            BitConverter.GetBytes(unknownValue4).CopyTo(buffer, PropertyOffsets.unknownValue4);
+            BitConverter.GetBytes(unknownValue5).CopyTo(buffer, PropertyOffsets.unknownValue5);
+            BitConverter.GetBytes(unknownValue6).CopyTo(buffer, PropertyOffsets.unknownValue6);
+
+            return buffer;
+
+        }
+
+
+    }
 }
 

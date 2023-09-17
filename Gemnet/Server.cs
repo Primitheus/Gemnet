@@ -179,4 +179,21 @@ public class Server
         }
     }
 
+    public async Task SendPacket(byte[] data, NetworkStream senderStream, bool Exclude)
+{
+    foreach (var client in clients)
+    {
+        // Skip the sender client (excludeClientId)
+
+        var clientStream = client.GetStream();
+        if (clientStream == senderStream && Exclude == true) {
+        } else {
+            await clientStream.WriteAsync(data, 0, data.Length);
+
+        }
+
+        Console.WriteLine($"Sent Packet");
+    }
+}
+
 }

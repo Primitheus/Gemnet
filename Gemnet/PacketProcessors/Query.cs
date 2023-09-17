@@ -310,7 +310,7 @@ namespace Gemnet.PacketProcessors
             {
                 response.RoomMaster = room.RoomMasterIGN;
                 response.SomeID = room.SomeID;
-                response.UnknownValue7 = request.UnknownValue7;
+                response.UnknownValue7 = request.UnknownValue7; // P2P ID
                 response.RoomName = room.RoomName;
                 response.UnknownValue9 = room.unknownValue6;
                 response.MaxPlayers = room.MaxPlayers;
@@ -362,6 +362,7 @@ namespace Gemnet.PacketProcessors
             foreach (var player in playerInfoJson)
             {
                 Console.WriteLine($"Get Player {player.IGN}");
+
                 Player newPlayer = new Player {
                     unknownValue1 = player.unknownValue1,
                     unknownValue2 = player.unknownValue2,
@@ -383,7 +384,7 @@ namespace Gemnet.PacketProcessors
 
                     response.Players = new List<Player>();
                 }
-                
+
                 Console.WriteLine("Add The Player");
                 response.Players.Add(newPlayer);
 
@@ -395,6 +396,47 @@ namespace Gemnet.PacketProcessors
 
         }
 
+        public static void UserJoined(ushort type, ushort action, NetworkStream stream)
+        {
+            Console.WriteLine("Notify User Joined Message");
+
+            UserJoinedRes response = new UserJoinedRes();
+            string jsonFilePath = "players.json";
+            string jsonData = File.ReadAllText(jsonFilePath);
+
+            List<PlayerInfo> playerInfoJson = JsonConvert.DeserializeObject<List<PlayerInfo>>(jsonData);
+            List<PlayerInfo> playerInfos = playerInfoJson.Where(player => player.IGN == "Gemnet").ToList();
+
+
+            response.Action = action;
+            response.Type = 576;
+
+            response.unknownValue1 = 1;
+            foreach (var player in playerInfos) {
+                response.Players.Add(new PlayerJoin {
+                    UserID = 2,
+                    IGN = player.IGN,
+                    unknownValue1 = 1,
+                    EXP = player.EXP,
+                    P2PID = player.unknownValue3,
+                    SomeID = player.SomeID,
+                    ItemID = player.ItemID,
+                    unknownValue2 = player.unknownValue4,
+                    unknownValue3 = player.unknownValue5,
+                    unknownValue4 = player.unknownValue6,
+                    unknownValue5 = player.unknownValue7,
+                    unknownValue6 = 1020001,
+                    unknownValue7 = 1,
+                    unknownValue8 = 5,
+                    Country = player.Country,
+                    Region = player.Region
+                });
+            }
+        
+            bool NOT = true;
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
+
+        }
         public static void GetReward(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
@@ -424,7 +466,51 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        
+        public static void UserReady(ushort type, ushort action, byte[] body, NetworkStream stream) 
+        {
+            action = 0x22;
+
+            UserReadyReq request = UserReadyReq.Deserialize(body);
+            Console.WriteLine($"Notify Message User Ready.");
+
+            UserReadyRes response = new UserReadyRes();
+
+            response.Action = action;
+            response.Type = 576;
+
+            response.unknownValue1 = request.unknownValue1;
+            response.unknownValue2 = request.unknownValue1;
+
+            response.IGN = "Gemnet";
+
+            bool NOT = false;
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
+
+        }
+
+        public static void StartMatch(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action = 0x23;
+
+            Console.WriteLine("Start Match");
+            StartMatchReq request = StartMatchReq.Deserialize(body);
+            StartMatchRes response = new StartMatchRes();
+
+            response.Action = action;
+            response.Type = 576;
+
+            response.unknownValue1 = 0x52;
+            response.unknownValue2 = 0x3e;
+
+            response.unknownValue3 = request.unknownValue1;
+            response.unknownValue4 = request.unknownValue2;
+            response.unknownValue5 = request.unknownValue3;
+            response.unknownValue6 = request.unknownValue4;
+
+            bool NOT = false;
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
+
+        }
 
     }
 }

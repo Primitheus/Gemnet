@@ -251,13 +251,17 @@ namespace SendPacket
                 case ActionQuery.JOIN_ROOM: // ACTION.JOIN_ROOM_1
                            // Process JOIN_ROOM_1 action
                     Query.JoinRoom(type, action, packetBody, stream);
+                    Query.UserJoined(type, 0x10, stream);
                     break;
                 case ActionQuery.JOIN_ROOM_GET_PLAYERS: // ACTION.JOIN_ROOM_2
                            // Process JOIN_ROOM_2 action
                     Query.JoinGetPlayers(type, action, packetBody, stream);
                     break;
+                case ActionQuery.USER_JOINED_ROOM:
+                    break;
                 case ActionQuery.USER_READY: // ACTION.USER_READY
                            // Process USER_READY action
+                    Query.UserReady(type, action, packetBody, stream);
                     break;
                 case ActionQuery.LEAVE_ROOM: // ACTION.LEAVE_ROOM
                            // Process LEAVE_ROOM action
@@ -268,6 +272,7 @@ namespace SendPacket
                     break;
                 case ActionQuery.START_GAME: // ACTION.START_GAME
                            // Process START_GAME action
+                    Query.StartMatch(type, action, packetBody, stream)
                     break;
                 case ActionQuery.END_MATCH:
                     Query.GetReward(type, action, packetBody, stream);

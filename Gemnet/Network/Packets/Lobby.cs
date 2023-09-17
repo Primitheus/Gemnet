@@ -120,6 +120,7 @@ namespace Gemnet.Network.Packets
             packet.unknownvalue6 = Convert.ToInt32(data[PropertyOffsets.unknownvalue6]);
             packet.unknownvalue7 = Convert.ToInt32(data[PropertyOffsets.unknownvalue7]);
 
+            packet.RoundNumber = Convert.ToInt32(data[PropertyOffsets.RoundNumber]);
             packet.GameMode = Convert.ToInt32(data[PropertyOffsets.GameMode]);
 
             packet.unknownvalue8 = Convert.ToInt32(data[PropertyOffsets.unknownvalue8]);

@@ -81,6 +81,7 @@ namespace Gemnet.Packets.Enums
             CREATE_ROOM = 0x86,
             JOIN_ROOM = 0x80,
             JOIN_ROOM_GET_PLAYERS = 0x88,
+            USER_JOINED_ROOM = 0x10,
             USER_READY = 0x60,
             LEAVE_ROOM = 0x82,
             CHANGE_MAP = 0xa8,
