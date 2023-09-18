@@ -281,10 +281,11 @@ namespace Gemnet.Network.Packets
                 BitConverter.GetBytes(player.unknownValue3).CopyTo(buffer, PlayerPropertyOffsets.unknownValue3+i);
                 Encoding.ASCII.GetBytes(player.SomeID).CopyTo(buffer, PlayerPropertyOffsets.SomeID+i);
 
+                j = 0;
                 foreach (var item in player.ItemID) 
                 {
                     Console.WriteLine($"Adding Item: {item}");
-                    BitConverter.GetBytes(item).CopyTo(buffer, PlayerPropertyOffsets.ItemID+j);
+                    BitConverter.GetBytes(item).CopyTo(buffer, PlayerPropertyOffsets.ItemID+i+j);
                     j += 4;
                 }
 
@@ -384,9 +385,9 @@ namespace Gemnet.Network.Packets
                 BitConverter.GetBytes(player.EXP).CopyTo(buffer, PropertyPlayerOffsets.EXP+i);
                 BitConverter.GetBytes(player.P2PID).CopyTo(buffer, PropertyPlayerOffsets.P2PID+i);
                 Encoding.ASCII.GetBytes(player.SomeID).CopyTo(buffer, PropertyPlayerOffsets.SomeID+i);
-
+                j = 0;
                 foreach(var item in player.ItemID) {
-                    BitConverter.GetBytes(item).CopyTo(buffer, PropertyPlayerOffsets.ItemID+j);
+                    BitConverter.GetBytes(item).CopyTo(buffer, PropertyPlayerOffsets.ItemID+j+i);
                     j += 4;
                 }
 
@@ -481,9 +482,9 @@ namespace Gemnet.Network.Packets
         private struct PropertyOffsets
         {
             public static readonly int unknownValue1 = 6;
-            public static readonly int unknownValue2 = 8;
+            //public static readonly int unknownValue2 = 8;
             public static readonly int unknownValue3 = 10;
-            public static readonly int unknownValue4 = 12;
+            //public static readonly int unknownValue4 = 12;
            
 
         }
@@ -497,10 +498,8 @@ namespace Gemnet.Network.Packets
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            packet.unknownValue1 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue1);
-            packet.unknownValue2 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue2);
-            packet.unknownValue3 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue3);
-            packet.unknownValue4 = BitConverter.ToInt16(data, PropertyOffsets.unknownValue4);
+            packet.unknownValue1 = BitConverter.ToInt32(data, PropertyOffsets.unknownValue1);
+            packet.unknownValue3 = BitConverter.ToInt32(data, PropertyOffsets.unknownValue3);
 
             return packet;
         }
@@ -521,16 +520,15 @@ namespace Gemnet.Network.Packets
             public static readonly int unknownValue1 = 6;
             public static readonly int unknownValue2 = 7;
             public static readonly int unknownValue3 = 10;
-            public static readonly int unknownValue4 = 12;
             public static readonly int unknownValue5 = 14;
-            public static readonly int unknownValue6 = 16;
+
 
         }
 
         public override byte[] Serialize()
         {
 
-            byte[] buffer = new byte[40];
+            byte[] buffer = new byte[18];
             Size = (ushort)buffer.Length;
 
             int offset = 0;
@@ -541,9 +539,7 @@ namespace Gemnet.Network.Packets
             BitConverter.GetBytes(unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2);
 
             BitConverter.GetBytes(unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3);
-            BitConverter.GetBytes(unknownValue4).CopyTo(buffer, PropertyOffsets.unknownValue4);
             BitConverter.GetBytes(unknownValue5).CopyTo(buffer, PropertyOffsets.unknownValue5);
-            BitConverter.GetBytes(unknownValue6).CopyTo(buffer, PropertyOffsets.unknownValue6);
 
             return buffer;
 
@@ -610,7 +606,7 @@ namespace Gemnet.Network.Packets
         public override byte[] Serialize()
         {
 
-            byte[] buffer = new byte[80];
+            byte[] buffer = new byte[40];
             Size = (ushort)buffer.Length;
 
             int offset = 0;
@@ -627,7 +623,6 @@ namespace Gemnet.Network.Packets
             BitConverter.GetBytes(0).CopyTo(buffer, 30);
             BitConverter.GetBytes(0).CopyTo(buffer, 31);
 
-            base.Serialize().CopyTo(buffer, offset);
               
             return buffer;
 
