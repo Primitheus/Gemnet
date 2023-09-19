@@ -277,6 +277,9 @@ namespace SendPacket
                 case ActionQuery.LOADING_GAME_1:
                     Query.LoadGame1(type, action, packetBody, stream);
                     break;
+                case ActionQuery.LOADING_GAME_2:
+                    Query.LoadGame2(type, action, packetBody, stream);
+                    break;
                 case ActionQuery.END_MATCH:
                     Query.GetReward(type, action, packetBody, stream);
                     break;

@@ -184,7 +184,7 @@ public class Server
 {
     foreach (var client in clients)
     {
-        // Skip the sender client (excludeClientId)
+        // Skip the sender client if == true;
 
         var clientStream = client.GetStream();
         if (clientStream == senderStream && Exclude == true) {
