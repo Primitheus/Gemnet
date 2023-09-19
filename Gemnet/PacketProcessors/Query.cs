@@ -529,9 +529,9 @@ namespace Gemnet.PacketProcessors
             }
             else
             {
-                // Handle the case where the username is not found (e.g., set a default value)
                 response.IGN = "UnknownUser";
             }
+
             response.unknownValue1 = request.unknownValue1;
             response.unknownValue2 = request.unknownValue2;
             response.unknownValue3 = request.unknownValue3;
@@ -545,5 +545,34 @@ namespace Gemnet.PacketProcessors
 
         }
 
+        public static void ChangeMap(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action = 0x20;
+
+            ChangeMapReq request = ChangeMapReq.Deserialize(body);
+            ChangeMapRes response = new ChangeMapRes();
+
+            response.Action = action;
+            response.Type = 576;
+
+            response.unknownValue1 = request.unknownValue1;
+            response.unknownValue2 = request.unknownValue2;
+            response.unknownValue3 = request.unknownValue3;
+            response.unknownValue4 = request.unknownValue4;
+            response.unknownValue5 = request.unknownValue5;
+            response.Map1 = request.Map1;
+            response.unknownValue7 = request.unknownValue7;
+            response.unknownValue8 = request.unknownValue8;
+
+            Console.WriteLine("Change Map");
+            bool NOT = false;
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
+            
+            byte[] data = { 0x02, 0x40, 0x00, 0x06, 0xa9, 0x00 };
+            _ = ServerHolder.ServerInstance.SendPacket(data, stream, NOT);
+
+
+
+        }
     }
 }

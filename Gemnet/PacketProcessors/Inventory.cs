@@ -79,10 +79,6 @@ namespace Gemnet.PacketProcessors
                     _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
                 }
-
-               
-
-
             }
 
         }

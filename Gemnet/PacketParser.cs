@@ -269,6 +269,7 @@ namespace SendPacket
                     break;
                 case ActionQuery.CHANGE_MAP: // ACTION.CHANGE_MAP
                            // Process CHANGE_MAP action
+                    Query.ChangeMap(type, action, packetBody, stream);
                     break;
                 case ActionQuery.START_GAME: // ACTION.START_GAME
                     Query.StartMatch(type, action, packetBody, stream);

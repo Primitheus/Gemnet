@@ -14,6 +14,51 @@ using System.Threading.Tasks;
 
 namespace Gemnet.Network.Packets
 {
+    public class LeaveRoomReq : HeaderPacket
+    {
+        public int Result {get; set;}
+        public new static LeaveRoomReq Deserialize(byte[] data)
+        {
+            LeaveRoomReq packet = new LeaveRoomReq();
+
+            int offset = 6;
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            offset += 4;
+            packet.Result = BitConverter.ToInt32(data, offset);
+
+            return packet;
+        }
+    }
+
+    public class LeaveRoomRes : HeaderPacket
+    {
+        public int Result {get; set;}
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[12];
+
+            Size = (ushort)(buffer.Length);
+
+            byte[] result = BitConverter.GetBytes(Result);
+
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+            offset += 6;
+
+            offset += 4;
+            result.CopyTo(buffer, offset);
+
+            return buffer;
+        }
+
+    }
 
     public class JoinRoomReq : HeaderPacket
     {
@@ -623,11 +668,116 @@ namespace Gemnet.Network.Packets
             BitConverter.GetBytes(0).CopyTo(buffer, 30);
             BitConverter.GetBytes(0).CopyTo(buffer, 31);
 
-              
             return buffer;
 
         }
 
     }
-}
 
+    public class ChangeMapReq : HeaderPacket
+    {
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+        public int unknownValue3 {get; set;}
+        public int unknownValue4 {get; set;}
+        public int unknownValue5 {get; set;}
+        public int Map1 {get; set;}
+        public int unknownValue7 {get; set;}
+        public int Map2 {get; set;} 
+        public int unknownValue8 {get; set;}
+        public int Map3 {get; set;} 
+
+        private struct PropertyOffsets
+        {
+            public static readonly int unknownValue1 = 6;
+            public static readonly int unknownValue2 = 8;
+            public static readonly int unknownValue3 = 11;
+            public static readonly int unknownValue4 = 12;
+            public static readonly int unknownValue5 = 13;
+            public static readonly int Map1 = 15;
+            public static readonly int unknownValue7 = 17;
+            public static readonly int Map2 = 19;
+            public static readonly int unknownValue8 = 21;
+            public static readonly int Map3 = 23;
+
+        }
+
+        public new static ChangeMapReq Deserialize(byte[] data)
+        {
+            ChangeMapReq packet = new ChangeMapReq();
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.unknownValue1 = Convert.ToInt32(data[PropertyOffsets.unknownValue1]);
+            packet.unknownValue2 = Convert.ToInt32(data[PropertyOffsets.unknownValue2]);
+            packet.unknownValue3 = Convert.ToInt32(data[PropertyOffsets.unknownValue3]);
+            packet.unknownValue4 = Convert.ToInt32(data[PropertyOffsets.unknownValue4]);
+            packet.unknownValue5 = Convert.ToInt32(data[PropertyOffsets.unknownValue5]);
+            packet.Map1 = Convert.ToInt32(data[PropertyOffsets.Map1]);
+            packet.unknownValue7 = Convert.ToInt32(data[PropertyOffsets.unknownValue7]);
+            packet.Map2 = Convert.ToInt32(data[PropertyOffsets.Map2]);
+            packet.unknownValue8 = Convert.ToInt32(data[PropertyOffsets.unknownValue8]);
+            packet.Map3 = Convert.ToInt32(data[PropertyOffsets.Map3]);
+
+            return packet;
+        }
+
+    }
+
+    public class ChangeMapRes : HeaderPacket
+    {
+        public int unknownValue1 {get; set;}
+        public int unknownValue2 {get; set;}
+        public int unknownValue3 {get; set;}
+        public int unknownValue4 {get; set;}
+        public int unknownValue5 {get; set;}
+        public int Map1 {get; set;} 
+        public int unknownValue7 {get; set;}
+        public int Map2 {get; set;} 
+        public int unknownValue8 {get; set;}
+        public int Map3 {get; set;} 
+
+        private struct PropertyOffsets
+        {
+            public static readonly int unknownValue1 = 6;
+            public static readonly int unknownValue2 = 8;
+            public static readonly int unknownValue3 = 11;
+            public static readonly int unknownValue4 = 12;
+            public static readonly int unknownValue5 = 13;
+            public static readonly int Map1 = 15;
+            public static readonly int unknownValue7 = 17;
+            public static readonly int Map2 = 19;
+            public static readonly int unknownValue8 = 21;
+            public static readonly int Map3 = 23;
+        }
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[25];
+            Size = (ushort)(buffer.Length);
+
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+          
+            BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
+            BitConverter.GetBytes(unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2);
+            BitConverter.GetBytes(unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3);
+            BitConverter.GetBytes(unknownValue4).CopyTo(buffer, PropertyOffsets.unknownValue4);
+            BitConverter.GetBytes(unknownValue5).CopyTo(buffer, PropertyOffsets.unknownValue5);
+            BitConverter.GetBytes(Map1).CopyTo(buffer, PropertyOffsets.Map1);
+            BitConverter.GetBytes(unknownValue7).CopyTo(buffer, PropertyOffsets.unknownValue7);
+            BitConverter.GetBytes(Map2).CopyTo(buffer, PropertyOffsets.Map2);
+            BitConverter.GetBytes(unknownValue8).CopyTo(buffer, PropertyOffsets.unknownValue8);
+            BitConverter.GetBytes(Map3).CopyTo(buffer, PropertyOffsets.Map3);
+
+            return buffer;
+        }
+
+
+    }
+
+}
