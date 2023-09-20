@@ -37,7 +37,7 @@ public class Server
         {
             TcpClient client = await tcpListener.AcceptTcpClientAsync();
             clients.Add(client);
-            _ = ProcessClient(client); // Start processing client asynchronously
+            _ = ProcessClient(client);
         }
     }
 
@@ -78,7 +78,6 @@ public class Server
         {
             if (offset + PacketHeaderSize > bytesRead)
             {
-                // Not enough bytes for a complete packet header, wait for more data
                 Console.WriteLine("Not Enough bytes for a complete packet header.");
                 break;
             }
@@ -89,7 +88,6 @@ public class Server
 
             if (length > bytesRead)
             {
-                // Not enough bytes for the complete packet, wait for more data
                 Console.WriteLine($"Length: {length}, Bytes Read: {bytesRead}.");
                 break;
             }
@@ -175,8 +173,6 @@ public class Server
             bytesSent += bufferSize;
             Console.WriteLine($"Sent Packet ({bytesSent}/{totalLength} bytes)");
 
-            // You can introduce a delay here if needed before sending the next chunk
-            // await Task.Delay(delayInMilliseconds);
         }
     }
 

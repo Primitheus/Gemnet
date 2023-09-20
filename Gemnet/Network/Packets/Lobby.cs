@@ -50,7 +50,7 @@ namespace Gemnet.Network.Packets
     public class CreateRoomReq : HeaderPacket 
     {
         public int unknownvalue1 {get; set;} //0x08
-        public int unknownvalue2 {get; set;} // goes into unknownValue5
+        public int P2PID {get; set;} // goes into unknownValue5
         public string SomeID {get; set;}
         public int unknownvalue3 {get; set;}
         public string RoomName {get; set;}
@@ -69,7 +69,7 @@ namespace Gemnet.Network.Packets
         private struct PropertyOffsets
         {
             public static readonly int unkownvalue1 = 6; 
-            public static readonly int unkownvalue2 = 8;
+            public static readonly int P2PID = 8;
             public static readonly int SomeID = 12;
             public static readonly int unknownvalue3 = 50;
             public static readonly int RoomName = 60;
@@ -97,7 +97,7 @@ namespace Gemnet.Network.Packets
             packet.Action = BitConverter.ToUInt16(data, 4);
 
             packet.unknownvalue1 = BitConverter.ToInt32(data, PropertyOffsets.unkownvalue1);
-            packet.unknownvalue2 = BitConverter.ToInt32(data, PropertyOffsets.unkownvalue2); 
+            packet.P2PID = BitConverter.ToInt32(data, PropertyOffsets.P2PID); 
 
             packet.SomeID = Encoding.ASCII.GetString(data, PropertyOffsets.SomeID, 4); // again, probably the p2p room id?
             nullTerminator = packet.SomeID.IndexOf('\x00');
@@ -189,7 +189,7 @@ namespace Gemnet.Network.Packets
         public int unknownValue3 {get; set;}
         public int unknownValue4 {get; set;}
         public string RoomMasterIGN {get; set;}
-        public int unknownValue5 {get; set;}
+        public int P2PID {get; set;}
         public string SomeID {get; set;}
         public string RoomName {get; set;}
         public int unknownValue6 {get; set;}
@@ -224,7 +224,7 @@ namespace Gemnet.Network.Packets
         public static readonly int unknownValue3 = 20;
         public static readonly int unknownValue4 = 26;
         public static readonly int RoomMasterIGN = 30;
-        public static readonly int unknownValue5 = 50;
+        public static readonly int P2PID = 50;
         public static readonly int SomeID = 54;
         public static readonly int RoomName = 86;
         public static readonly int unknownValue6 = 126;
@@ -276,7 +276,7 @@ namespace Gemnet.Network.Packets
                 BitConverter.GetBytes(room.unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3+i);
                 BitConverter.GetBytes(room.unknownValue4).CopyTo(buffer, PropertyOffsets.unknownValue4+i);
                 Encoding.ASCII.GetBytes(room.RoomMasterIGN).CopyTo(buffer, PropertyOffsets.RoomMasterIGN+i);
-                BitConverter.GetBytes(room.unknownValue5).CopyTo(buffer, PropertyOffsets.unknownValue5+i);
+                BitConverter.GetBytes(room.P2PID).CopyTo(buffer, PropertyOffsets.P2PID+i);
                 Encoding.ASCII.GetBytes(room.SomeID).CopyTo(buffer, PropertyOffsets.SomeID+i);
                 Encoding.ASCII.GetBytes(room.RoomName).CopyTo(buffer, PropertyOffsets.RoomName+i);
                 BitConverter.GetBytes(room.unknownValue6).CopyTo(buffer, PropertyOffsets.unknownValue6+i);

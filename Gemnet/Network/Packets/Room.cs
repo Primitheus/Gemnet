@@ -218,7 +218,7 @@ namespace Gemnet.Network.Packets
         public int unknownValue2 {get; set;}
         public int EXP {get; set;}
         public string IGN { get; set; }
-        public int unknownValue3 {get; set;}
+        public int P2PID {get; set;}
         public string SomeID {get; set;}
         public int[] ItemID { get; set; }
         public int unknownValue4 {get; set;}
@@ -283,7 +283,7 @@ namespace Gemnet.Network.Packets
             public static readonly int unknownValue2 = 2;
             public static readonly int EXP = 6;
             public static readonly int IGN = 10; 
-            public static readonly int unknownValue3 = 32;
+            public static readonly int P2PID = 32;
             public static readonly int SomeID = 36;
             public static readonly int ItemID = 68;
             public static readonly int unknownValue4 = 1515;
@@ -323,7 +323,7 @@ namespace Gemnet.Network.Packets
                 BitConverter.GetBytes(player.unknownValue2).CopyTo(buffer, PlayerPropertyOffsets.unknownValue2+i);
                 BitConverter.GetBytes(player.EXP).CopyTo(buffer, PlayerPropertyOffsets.EXP+i);
                 Encoding.ASCII.GetBytes(player.IGN).CopyTo(buffer, PlayerPropertyOffsets.IGN+i);
-                BitConverter.GetBytes(player.unknownValue3).CopyTo(buffer, PlayerPropertyOffsets.unknownValue3+i);
+                BitConverter.GetBytes(player.P2PID).CopyTo(buffer, PlayerPropertyOffsets.P2PID+i);
                 Encoding.ASCII.GetBytes(player.SomeID).CopyTo(buffer, PlayerPropertyOffsets.SomeID+i);
 
                 j = 0;

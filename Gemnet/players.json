@@ -1,32 +1,36 @@
 [
-    {
-        "unknownValue1": 1,
-        "unknownValue2": 21,
-        "EXP": 55,
-        "IGN": "Nimonix",
-        "unknownValue3" : 109,
-        "SomeID": "75",
-        "ItemID": [1000176],
-        "unknownValue4": 78,
-        "unknownValue5": 78,
-        "unknownValue6": 232,
-        "unknownValue7": 3,
-        "Country": "US",
-        "Region": "NA"
-    },
-    {
-        "unknownValue1": 0,
-        "unknownValue2": 16,
-        "EXP": 55,
-        "IGN": "Gemnet",
-        "unknownValue3" : 145,
-        "SomeID": "75",
-        "ItemID": [1000176, 0],
-        "unknownValue4": 0,
-        "unknownValue5": 0,
-        "unknownValue6": 232,
-        "unknownValue7": 3,
-        "Country": "CA",
-        "Region": "NA"
-    }
-  ]
+  {
+    "unknownValue1": 1,
+    "unknownValue2": 2,
+    "EXP": 1337,
+    "IGN": "Nimonix",
+    "P2PID": 14,
+    "SomeID": "113",
+    "ItemID": [
+      1000175
+    ],
+    "unknownValue4": 78,
+    "unknownValue5": 78,
+    "unknownValue6": 232,
+    "unknownValue7": 4,
+    "Country": "US",
+    "Region": "NA"
+  },
+  {
+    "unknownValue1": 0,
+    "unknownValue2": 16,
+    "EXP": 1337,
+    "IGN": "Gemnet",
+    "P2PID": 78,
+    "SomeID": "113",
+    "ItemID": [
+      1000175
+    ],
+    "unknownValue4": 78,
+    "unknownValue5": 78,
+    "unknownValue6": 232,
+    "unknownValue7": 4,
+    "Country": "US",
+    "Region": "NA"
+  }
+]
