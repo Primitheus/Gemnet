@@ -62,12 +62,12 @@ namespace Gemnet.Network.Packets
 
     public class JoinRoomReq : HeaderPacket
     {
-        public int UnknownValue1 {get; set;} // goes into UnknownValue1
-        public int UnknownValue2 {get; set;} // goes into UnknownValue2
+        public int UnknownValue1 {get; set;} // goes into UnknownValue1 6
+        public int UnknownValue2 {get; set;} // goes into UnknownValue2 10
         public int UnknownValue3 {get; set;} // goes into UnknownValue3
         public int UnknownValue4 {get; set;} // goes into UnknownValue4
-        public int UnknownValue5 {get; set;} // goes into UnknownValue5
-        public int UnknownValue6 {get; set;} // goes into UnknownValue6
+        public int UnknownValue5 {get; set;} // goes into UnknownValue5 // 18
+        public int UnknownValue6 {get; set;} // goes into UnknownValue6 // 20
         public int UnknownValue7{get; set;} // goes into UnknownValue7 THIS IS THE P2P ID!
         public string SomeID {get; set;}
 
@@ -139,12 +139,12 @@ namespace Gemnet.Network.Packets
 
         private struct PropertyOffsets
         {
-            public static readonly int UnknownValue1 = 6; 
+            public static readonly int UnknownValue1 = 6;
             public static readonly int UnknownValue2 = 10;
-            public static readonly int UnknownValue3 = 12;
-            public static readonly int UnknownValue4 = 14;
-            public static readonly int UnknownValue5 = 18;
-            public static readonly int UnknownValue6 = 20;
+            public static readonly int UnknownValue3 = 12; // SlotID
+            public static readonly int UnknownValue4 = 14; 
+            public static readonly int UnknownValue5 = 16;
+            public static readonly int UnknownValue6 = 18;
             public static readonly int RoomMaster = 28;
             public static readonly int UnknownValue7 = 48;
             public static readonly int SomeID = 52;
@@ -225,6 +225,9 @@ namespace Gemnet.Network.Packets
         public int unknownValue5 {get; set;}
         public int unknownValue6 {get; set;}
         public int unknownValue7 {get; set;}
+        public int unknownValue8 {get; set;}
+        public int unknownValue9 {get; set;}
+        public int unknownValue10 {get; set;}
         public string Country {get; set;}
         public string Region {get; set;}
 
@@ -290,6 +293,10 @@ namespace Gemnet.Network.Packets
             public static readonly int unknownValue5 = 1516;
             public static readonly int unknownValue6 = 1538;
             public static readonly int unknownValue7 = 1539;
+            public static readonly int unknownValue8 = 1543;
+            public static readonly int unknownValue9 = 1547;
+            public static readonly int unknownValue10 = 1551;
+
             public static readonly int Country = 1554;
             public static readonly int Region = 1562;
         }
@@ -338,6 +345,9 @@ namespace Gemnet.Network.Packets
                 BitConverter.GetBytes(player.unknownValue5).CopyTo(buffer, PlayerPropertyOffsets.unknownValue5+i);
                 BitConverter.GetBytes(player.unknownValue6).CopyTo(buffer, PlayerPropertyOffsets.unknownValue6+i);
                 BitConverter.GetBytes(player.unknownValue7).CopyTo(buffer, PlayerPropertyOffsets.unknownValue7+i);
+                BitConverter.GetBytes(player.unknownValue8).CopyTo(buffer, PlayerPropertyOffsets.unknownValue8+i);
+                BitConverter.GetBytes(player.unknownValue9).CopyTo(buffer, PlayerPropertyOffsets.unknownValue9+i);
+                BitConverter.GetBytes(player.unknownValue10).CopyTo(buffer, PlayerPropertyOffsets.unknownValue10+i);
                 Encoding.ASCII.GetBytes(player.Country).CopyTo(buffer, PlayerPropertyOffsets.Country+i);
                 Encoding.ASCII.GetBytes(player.Region).CopyTo(buffer, PlayerPropertyOffsets.Region+i);
                 i += 1594;

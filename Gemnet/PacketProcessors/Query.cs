@@ -64,12 +64,18 @@ namespace Gemnet.PacketProcessors
 
             byte[] someData = { 0xb8, 0xfd, 0x7f, 0x02, 0xd8, 0x8c, 0x0d, 0x01 };
 
+              CreateRoomRes response = new CreateRoomRes();
+
+            response.Type = 576;
+            response.Action = action;
+            response.Result = 8;
+
             // Create a new RoomInfoJson object or update an existing one
             RoomInfoJson newRoom = new RoomInfoJson
             {
-                unknownValue1 = 1,
-                unknownValue2 = 1,
-                unknownValue3 = 1,
+                unknownValue1 = response.Result,
+                unknownValue2 = response.Result,
+                unknownValue3 = response.Result,
                 unknownValue4 = 1,
                 RoomMasterIGN = "Nimonix",
                 P2PID = request.P2PID,
@@ -94,11 +100,15 @@ namespace Gemnet.PacketProcessors
 
             };
 
-            int[] itemID = { 1000175 };
+          
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+
+            int[] itemID = { 1000175, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 2030058 };
 
             Player newPlayer = new Player {
-                unknownValue1 = 1,
-                unknownValue2 = 2,
+                unknownValue1 = 0,
+                unknownValue2 = 11,
                 EXP = 1337,
                 IGN = "Nimonix",
                 P2PID = request.P2PID,
@@ -107,7 +117,10 @@ namespace Gemnet.PacketProcessors
                 unknownValue4 = 78,
                 unknownValue5 = 78,
                 unknownValue6 = 232,
-                unknownValue7 = 4,
+                unknownValue7 = 3,
+                unknownValue8 = 0,
+                unknownValue9 = 0,
+                unknownValue10 = 0,
                 Country = "US",
                 Region = "NA",
 
@@ -124,13 +137,7 @@ namespace Gemnet.PacketProcessors
             File.WriteAllText("rooms.json", updatedJsonData);
             File.WriteAllText("players.json", updatedPlayerData);
 
-            CreateRoomRes response = new CreateRoomRes();
 
-            response.Type = 576;
-            response.Action = action;
-            response.Result = 6;
-
-            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
         }
 
@@ -216,6 +223,9 @@ namespace Gemnet.PacketProcessors
             public int unknownValue5 {get; set;}
             public int unknownValue6 {get; set;}
             public int unknownValue7 {get; set;}
+            public int unknownValue8 {get; set;}
+            public int unknownValue9 {get; set;}
+            public int unknownValue10 {get; set;}
             public string Country {get; set;}
             public string Region {get; set;}
 
@@ -323,13 +333,28 @@ namespace Gemnet.PacketProcessors
             List<RoomInfoJson> roomInfoJsonList = JsonConvert.DeserializeObject<List<RoomInfoJson>>(jsonData);
             List<RoomInfoJson> matchingRooms = roomInfoJsonList.Where(room => room.SomeID == request.SomeID).ToList();
 
+
             string jsonPlayers = File.ReadAllText("players.json");
             List<Player> playerInfoJsonList = JsonConvert.DeserializeObject<List<Player>>(jsonPlayers);
+
+            List<Player> RoomMaster = playerInfoJsonList.Where(player => player.IGN == "Nimonix").ToList();
+
 
             JoinRoomRes response = new JoinRoomRes();
 
             response.Type = 576;
             response.Action = action;
+
+            response.UnknownValue1 = request.UnknownValue1;
+            response.UnknownValue2 = request.UnknownValue2;
+
+            response.UnknownValue3 = 6; // Slot ID 
+
+            foreach (var player in RoomMaster)
+            {
+                response.UnknownValue5 = player.unknownValue1;
+                response.UnknownValue6 = player.unknownValue2;
+            }
 
             foreach (var room in matchingRooms)
             {
@@ -354,11 +379,11 @@ namespace Gemnet.PacketProcessors
 
             }
 
-            int[] itemID = { 1000175 };
+            int[] itemID = { 1000175, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 2030058 };
 
             Player newPlayer = new Player {
-                unknownValue1 = 0,
-                unknownValue2 = 16,
+                unknownValue1 = 6,
+                unknownValue2 = 1,
                 EXP = 1337,
                 IGN = "Gemnet",
                 P2PID = request.UnknownValue7,
@@ -367,7 +392,10 @@ namespace Gemnet.PacketProcessors
                 unknownValue4 = 78,
                 unknownValue5 = 78,
                 unknownValue6 = 232,
-                unknownValue7 = 4,
+                unknownValue7 = 3,
+                unknownValue8 = 1020001,
+                unknownValue9 = 1,
+                unknownValue10 = 5,
                 Country = "US",
                 Region = "NA",
 
@@ -403,8 +431,8 @@ namespace Gemnet.PacketProcessors
             response.Type = 576;
 
             response.unknownValue1 = request.unknownValue1;
-            response.unknownValue2 = request.unknownValue2;
-            response.unknownValue3 = 1;
+            response.unknownValue2 = 8;
+            response.unknownValue3 = 0;
             response.PlayerNumber = 2;
 
 
@@ -424,6 +452,8 @@ namespace Gemnet.PacketProcessors
                     unknownValue5 = player.unknownValue5,
                     unknownValue6 = player.unknownValue6,
                     unknownValue7 = player.unknownValue7,
+                    unknownValue8 = player.unknownValue8,
+                    unknownValue9 = player.unknownValue9,
                     Country = player.Country,
                     Region = player.Region
 
@@ -460,10 +490,11 @@ namespace Gemnet.PacketProcessors
             response.Action = action;
             response.Type = 576;
 
-            response.unknownValue1 = 1;
+            response.unknownValue1 = 6; // Slot ID
+
             foreach (var player in playerInfos) {
                 response.Players.Add(new PlayerJoin {
-                    UserID = 2,
+                    UserID = 223567,
                     IGN = player.IGN,
                     unknownValue1 = 1,
                     EXP = player.EXP,
@@ -474,16 +505,23 @@ namespace Gemnet.PacketProcessors
                     unknownValue3 = player.unknownValue5,
                     unknownValue4 = player.unknownValue6,
                     unknownValue5 = player.unknownValue7,
-                    unknownValue6 = 1020001,
-                    unknownValue7 = 1,
-                    unknownValue8 = 5,
+                    unknownValue6 = player.unknownValue8,
+                    unknownValue7 = player.unknownValue9,
+                    unknownValue8 = player.unknownValue10,
                     Country = player.Country,
                     Region = player.Region
                 });
+
             }
+
+            byte[] data = { 0x02, 0x40, 0x00, 0x1b, 0x18, 0x00, 0x4E, 0x69 ,0x6D, 0x6F, 0x6E, 0x69, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
         
             bool NOT = true;
+
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
+            _ = ServerHolder.ServerInstance.SendPacket(data, stream, false);
+
 
         }
         public static void GetReward(ushort type, ushort action, byte[] body, NetworkStream stream)
@@ -561,8 +599,10 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public static void LoadGame1(ushort type, ushort action, byte[] body, NetworkStream stream)
+        public static async Task LoadGame1(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
+           
+
             action = 0x15;
 
             LoadGameReq request = LoadGameReq.Deserialize(body);
@@ -583,9 +623,9 @@ namespace Gemnet.PacketProcessors
 
             response.unknownValue1 = request.unknownValue1;
 
-
-
             Console.WriteLine("Loading 1");
+            await Task.Delay(5000);
+
             bool NOT = false;
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
 

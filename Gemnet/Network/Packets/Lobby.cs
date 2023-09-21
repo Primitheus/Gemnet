@@ -270,6 +270,7 @@ namespace Gemnet.Network.Packets
                 if (i == 0) {
                 BitConverter.GetBytes(room.unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1+i);
                 BitConverter.GetBytes(room.unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2+i);
+                BitConverter.GetBytes(room.unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3+i);
                 BitConverter.GetBytes(Rooms.Count).CopyTo(buffer, PropertyOffsets.NumberOfRooms+i);
                 }
                
