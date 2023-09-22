@@ -38,7 +38,7 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Runes
     * Opening Boxes/Packages
     * Medal Shop
-      
+    * Match Rewards
 ## Credits
   - Configuration and Persistence Model
     
