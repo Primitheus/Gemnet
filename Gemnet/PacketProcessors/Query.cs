@@ -95,8 +95,8 @@ namespace Gemnet.PacketProcessors
                 unknownValue11 = request.unknownvalue8,
                 unknownValue12 = request.unknownvalue9,
                 Time = someData,
-                Country = "GB",
-                Region = "EU",
+                Country = "US",
+                Region = "NA",
 
             };
 
@@ -313,8 +313,8 @@ namespace Gemnet.PacketProcessors
                         unknownValue11 = roomJson.unknownValue11,
                         unknownValue12 = roomJson.unknownValue12,
                         Time = someData,
-                        Country = roomJson.Country,
-                        Region = roomJson.Region,
+                        Country = "US",
+                        Region = "NA",
                     });
                 }
 
@@ -374,8 +374,8 @@ namespace Gemnet.PacketProcessors
                 response.GameMode = room.GameMode;
                 response.UnknownValue11 = room.unknownValue11;
                 response.UnknownValue12 = room.unknownValue12;
-                response.Country = room.Country;
-                response.Region = room.Region;
+                response.Country = "US";
+                response.Region = "NA";
 
             }
 
@@ -454,8 +454,8 @@ namespace Gemnet.PacketProcessors
                     unknownValue7 = player.unknownValue7,
                     unknownValue8 = player.unknownValue8,
                     unknownValue9 = player.unknownValue9,
-                    Country = player.Country,
-                    Region = player.Region
+                    Country = "US",
+                    Region = "NA"
 
                 };
 
@@ -494,7 +494,7 @@ namespace Gemnet.PacketProcessors
 
             foreach (var player in playerInfos) {
                 response.Players.Add(new PlayerJoin {
-                    UserID = 223567,
+                    UserID = 2,
                     IGN = player.IGN,
                     unknownValue1 = 1,
                     EXP = player.EXP,
@@ -508,8 +508,8 @@ namespace Gemnet.PacketProcessors
                     unknownValue6 = player.unknownValue8,
                     unknownValue7 = player.unknownValue9,
                     unknownValue8 = player.unknownValue10,
-                    Country = player.Country,
-                    Region = player.Region
+                    Country = "US",
+                    Region = "NA"
                 });
 
             }
@@ -599,7 +599,7 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public static async Task LoadGame1(ushort type, ushort action, byte[] body, NetworkStream stream)
+        public static void LoadGame1(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
            
 
@@ -624,7 +624,6 @@ namespace Gemnet.PacketProcessors
             response.unknownValue1 = request.unknownValue1;
 
             Console.WriteLine("Loading 1");
-            await Task.Delay(5000);
 
             bool NOT = false;
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);

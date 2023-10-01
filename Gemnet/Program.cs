@@ -52,7 +52,7 @@ using Gemnet.Persistence.Models;
             DBGeneral.CheckAndCreateDatabase(database);
 
 
-            Server server = new Server(IPAddress.Any, m_settings.Port);
+            Server server = new Server(IPAddress.Loopback, m_settings.Port);
 
             ServerHolder.ServerInstance = server;
             ServerHolder.DatabaseInstance = database;

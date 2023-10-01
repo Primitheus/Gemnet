@@ -64,7 +64,10 @@ namespace Gemnet.PacketProcessors
                 response.Carats = LoginQuery.Carats;
                 response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
                 response.Token = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234";
+                response.Region = "NA";
+                response.Country = "US";
                 response.ForumName = LoginQuery.ForumName;
+                
 
                 clientUsernames.Add(stream, response.IGN);
 

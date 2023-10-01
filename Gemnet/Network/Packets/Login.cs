@@ -80,6 +80,8 @@ public class LoginRes : HeaderPacket
     public int Exp { get; set; }
     public int Carats { get; set; }
     public string GUID { get; set; }
+    public string Country { get; set; }
+    public string Region { get; set; }
     public string Token { get; set; }
     public string ForumName { get; set; }
 
@@ -89,9 +91,12 @@ public class LoginRes : HeaderPacket
         public static readonly int IGN = 10;
         public static readonly int Exp = 34;
         public static readonly int Carats = 38;
-        public static readonly int GUID = 96;
-        public static readonly int Token = 197;
+        public static readonly int GUID = 97;
+        public static readonly int Country = 158;
+        public static readonly int Region = 166;
+        public static readonly int Token = 198;
         public static readonly int ForumName = 262;
+        
     }
 
     public override byte[] Serialize()
@@ -107,6 +112,8 @@ public class LoginRes : HeaderPacket
         BitConverter.GetBytes(Exp).CopyTo(buffer, PropertyOffsets.Exp);
         BitConverter.GetBytes(Carats).CopyTo(buffer, PropertyOffsets.Carats);
         Encoding.ASCII.GetBytes(GUID).CopyTo(buffer, PropertyOffsets.GUID);
+        Encoding.ASCII.GetBytes(Country).CopyTo(buffer, PropertyOffsets.Country);
+        Encoding.ASCII.GetBytes(Region).CopyTo(buffer, PropertyOffsets.Region);
         Encoding.ASCII.GetBytes(Token).CopyTo(buffer, PropertyOffsets.Token);
         Encoding.ASCII.GetBytes(ForumName).CopyTo(buffer, PropertyOffsets.ForumName);
 
