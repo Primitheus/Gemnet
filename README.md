@@ -1,7 +1,7 @@
 # Gemnet
 Rumble Fighter/Gem Fighter Server Emulator.
 
-This emulator is backwards compatible with all if not most versions of Rumble Fighter.
+This emulator is backwards compatible with all if not most versions of Rumble Fighter with very limited functionality.
 Testing is done on an early 2007 build of the game and the newest build of the game.
 
 No testing or plans is currently being made for anything specific to Gem Fighter, however porting it to Gem Fighter shouldn't be a difficult task.
@@ -14,11 +14,9 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Survival
     * EXP/CARAT Rewards
 
-
 - In Progress
     * Lobby
     * Create/Join Rooms
-
 
 - TODO
     * ProudNet Emulation
@@ -27,7 +25,7 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Chat
     * Megaphone
     * Avatar List
-    * Character Creation
+    * InGame & Account Character Creation
     * Guilds
     * Name Change
     * Enchantment & Avalon
@@ -38,7 +36,20 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Runes
     * Opening Boxes/Packages
     * Medal Shop
-      
+    * Match Rewards
+    * Item equip persistence.
+ 
+- Major Bugs
+    * Crashing most of the time (almost 100%) when starting a match with two players.
+    * Player Information isn't accurately displaying in rooms.
+    * Unknown Room Master identifier, Unknown position updating inside rooms.
+    * Medals not showing. (Unknown field somewhere)
+ 
+- Road Blocks
+   * ProudNet
+   * NSZ/Build Limitations.
+
+
 ## Credits
   - Configuration and Persistence Model
     
