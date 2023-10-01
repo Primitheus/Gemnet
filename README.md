@@ -14,17 +14,6 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Survival
     * EXP/CARAT Rewards
 
-- Major Bugs
-    * Crashing most of the time (almost 100%) when starting a match with two players.
-    * Player Information isn't accurately displaying in rooms.
-    * Unknown Room Master identifier, Unknown position updating inside rooms.
-    * Medals not showing. (Unknown field somewhere)
- 
-- Road Blocks
-   * ProudNet
-   * NSZ/Build Limitations.
-
-
 - In Progress
     * Lobby
     * Create/Join Rooms
@@ -48,9 +37,19 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Opening Boxes/Packages
     * Medal Shop
     * Match Rewards
-    * Item equip persistence. 
-
+    * Item equip persistence.
  
+- Major Bugs
+    * Crashing most of the time (almost 100%) when starting a match with two players.
+    * Player Information isn't accurately displaying in rooms.
+    * Unknown Room Master identifier, Unknown position updating inside rooms.
+    * Medals not showing. (Unknown field somewhere)
+ 
+- Road Blocks
+   * ProudNet
+   * NSZ/Build Limitations.
+
+
 ## Credits
   - Configuration and Persistence Model
     
