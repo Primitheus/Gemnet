@@ -55,11 +55,12 @@ namespace Gemnet.PacketProcessors
             } else {
 
                 LoginRes response = new LoginRes();
-
+                Random random = new Random();
+                int randomResult = random.Next(1, 101);
                 response.Type = type;
                 response.Action = action;
                 response.UserID = LoginQuery.UUID;
-                response.IGN = LoginQuery.IGN;
+                response.IGN = LoginQuery.IGN+(randomResult.ToString());
                 response.Exp = LoginQuery.EXP;
                 response.Carats = LoginQuery.Carats;
                 response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";

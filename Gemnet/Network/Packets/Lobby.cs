@@ -181,7 +181,7 @@ namespace Gemnet.Network.Packets
 
     }
 
-    public class RoomInfo
+    public class RoomInfoA
     {
         public int unknownValue1 {get; set;}
         public int unknownValue2 {get; set;}
@@ -214,7 +214,7 @@ namespace Gemnet.Network.Packets
     public class GetRoomListRes : HeaderPacket 
     {
 
-        public List<RoomInfo> Rooms { get; set; }
+        public List<RoomInfoA> Rooms { get; set; }
 
         private struct PropertyOffsets
         {
@@ -248,7 +248,7 @@ namespace Gemnet.Network.Packets
         
         public GetRoomListRes()
         {
-            Rooms = new List<RoomInfo>();
+            Rooms = new List<RoomInfoA>();
 
         }
 

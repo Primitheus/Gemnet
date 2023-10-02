@@ -15,6 +15,34 @@ namespace Gemnet.PacketProcessors
 {
     internal class Query {
 
+        private static List<RoomInfo> rooms = new List<RoomInfo>();
+        private static List<Player> players = new List<Player>();
+        private static List<PlayerInfo> playerinfo = new List<PlayerInfo>();
+
+        public static RoomInfo GetRoomByID(string ID) {
+            return rooms.FirstOrDefault(room => room.SomeID == ID);
+        }
+
+        public static Player GetPlayerByName(string UserIGN) {
+            return players.FirstOrDefault(player => player.IGN == UserIGN);
+        }
+
+        public static List<PlayerInfo> GetPlayersBySomeID(string someID)
+        {
+            return playerinfo.Where(player => player.SomeID == someID).ToList();
+        }
+
+        public static string GetRoomID(int value)
+        {
+            RoomInfo room = rooms.FirstOrDefault(r => r.unknownValue1 == value);
+            return room != null ? room.SomeID : "0"; // Return -1 (or any default value) if no matching room is found.
+        }
+
+        public static List<Player> GetPlayersInRoom(string SomeID){
+            return players.Where(player => player.SomeID == SomeID).ToList();
+        }
+
+
 
         public static void GetEquippedAvatar(ushort type, ushort action, NetworkStream stream)
         {
@@ -56,28 +84,28 @@ namespace Gemnet.PacketProcessors
 
             Console.WriteLine($"Create Room: Name='{request.RoomName}', ID='{request.SomeID}', MatchType='{request.MatchType}', GameMode='{request.GameMode}'");
 
-            string jsonRooms = File.ReadAllText("rooms.json");
-            List<RoomInfoJson> roomInfoJsonList = JsonConvert.DeserializeObject<List<RoomInfoJson>>(jsonRooms);
-
-            string jsonPlayers = File.ReadAllText("players.json");
-            List<Player> playerInfoJsonList = JsonConvert.DeserializeObject<List<Player>>(jsonPlayers);
-
             byte[] someData = { 0xb8, 0xfd, 0x7f, 0x02, 0xd8, 0x8c, 0x0d, 0x01 };
 
-              CreateRoomRes response = new CreateRoomRes();
+            CreateRoomRes response = new CreateRoomRes();
 
             response.Type = 576;
             response.Action = action;
-            response.Result = 8;
 
+            Random random = new Random();
+            int randomResult = random.Next(1, 101);
+            response.Result = randomResult;
+            string ign;
+
+            Server.clientUsernames.TryGetValue(stream, out string username);
+            Console.WriteLine($"RoomMaster: {username}");
             // Create a new RoomInfoJson object or update an existing one
-            RoomInfoJson newRoom = new RoomInfoJson
+            RoomInfo newRoom = new RoomInfo
             {
                 unknownValue1 = response.Result,
                 unknownValue2 = response.Result,
                 unknownValue3 = response.Result,
                 unknownValue4 = 1,
-                RoomMasterIGN = "Nimonix",
+                RoomMasterIGN = username,
                 P2PID = request.P2PID,
                 SomeID = request.SomeID,
                 RoomName = request.RoomName,
@@ -97,10 +125,8 @@ namespace Gemnet.PacketProcessors
                 Time = someData,
                 Country = "US",
                 Region = "NA",
-
             };
 
-          
 
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
@@ -110,7 +136,7 @@ namespace Gemnet.PacketProcessors
                 unknownValue1 = 0,
                 unknownValue2 = 11,
                 EXP = 1337,
-                IGN = "Nimonix",
+                IGN = username,
                 P2PID = request.P2PID,
                 SomeID = request.SomeID,
                 ItemID = itemID,
@@ -126,17 +152,8 @@ namespace Gemnet.PacketProcessors
 
             };
 
-            playerInfoJsonList.Add(newPlayer);
-            roomInfoJsonList.Add(newRoom);
-
-            // Serialize the updated list back to JSON
-            string updatedJsonData = JsonConvert.SerializeObject(roomInfoJsonList, Formatting.Indented);
-            string updatedPlayerData = JsonConvert.SerializeObject(playerInfoJsonList, Formatting.Indented);
-
-            // Write the JSON data back to rooms.json
-            File.WriteAllText("rooms.json", updatedJsonData);
-            File.WriteAllText("players.json", updatedPlayerData);
-
+            players.Add(newPlayer);
+            rooms.Add(newRoom);
 
 
         }
@@ -182,7 +199,7 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public class RoomInfoJson
+        public class RoomInfo
         {
             public int unknownValue1 {get; set;}
             public int unknownValue2 {get; set;}
@@ -239,7 +256,7 @@ namespace Gemnet.PacketProcessors
 
             byte[] someData = { 0xb8, 0xfd, 0x7f, 0x02, 0xd8, 0x8c, 0x0d, 0x01 };
 
-            if (request.ChannelID == 10) {
+            if (request.ChannelID == 10 || request.ChannelID == 1) {
                 Console.WriteLine($"[CHANNEL] FREE");
                 GetRoomListRes response = new GetRoomListRes();
 
@@ -285,37 +302,37 @@ namespace Gemnet.PacketProcessors
                 string jsonFilePath = "rooms.json";
                 string jsonData = File.ReadAllText(jsonFilePath);
 
-                List<RoomInfoJson> roomInfoJsonList = JsonConvert.DeserializeObject<List<RoomInfoJson>>(jsonData);
 
-                foreach (var roomJson in roomInfoJsonList)
+                foreach (var room in rooms)
                 {
-                    response.Rooms.Add(new RoomInfo
+                    response.Rooms.Add(new RoomInfoA
                     {
-                        unknownValue1 = roomJson.unknownValue1,
-                        unknownValue2 = roomJson.unknownValue2,
-                        unknownValue3 = roomJson.unknownValue3,
-                        unknownValue4 = roomJson.unknownValue4,
-                        RoomMasterIGN = roomJson.RoomMasterIGN,
-                        P2PID = roomJson.P2PID,
-                        SomeID = roomJson.SomeID,
-                        RoomName = roomJson.RoomName,
-                        unknownValue6 = roomJson.unknownValue6,
-                        MaxPlayers = roomJson.MaxPlayers,
-                        PlayerNumber = roomJson.PlayerNumber,
-                        GameState = roomJson.GameState,
-                        unknownValue7 = roomJson.unknownValue7,
-                        MatchType = roomJson.MatchType,
-                        unknownValue8 = roomJson.unknownValue8,
-                        unknownValue9 = roomJson.unknownValue9,
-                        unknownValue10 = roomJson.unknownValue10,
-                        RoundNumber = roomJson.RoundNumber,
-                        GameMode = roomJson.GameMode,
-                        unknownValue11 = roomJson.unknownValue11,
-                        unknownValue12 = roomJson.unknownValue12,
+                        unknownValue1 = room.unknownValue1,
+                        unknownValue2 = room.unknownValue2,
+                        unknownValue3 = room.unknownValue3,
+                        unknownValue4 = room.unknownValue4,
+                        RoomMasterIGN = room.RoomMasterIGN,
+                        P2PID = room.P2PID,
+                        SomeID = room.SomeID,
+                        RoomName = room.RoomName,
+                        unknownValue6 = room.unknownValue6,
+                        MaxPlayers = room.MaxPlayers,
+                        PlayerNumber = room.PlayerNumber,
+                        GameState = room.GameState,
+                        unknownValue7 = room.unknownValue7,
+                        MatchType = room.MatchType,
+                        unknownValue8 = room.unknownValue8,
+                        unknownValue9 = room.unknownValue9,
+                        unknownValue10 = room.unknownValue10,
+                        RoundNumber = room.RoundNumber,
+                        GameMode = room.GameMode,
+                        unknownValue11 = room.unknownValue11,
+                        unknownValue12 = room.unknownValue12,
                         Time = someData,
                         Country = "US",
                         Region = "NA",
                     });
+
                 }
 
                 _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
@@ -329,15 +346,7 @@ namespace Gemnet.PacketProcessors
             JoinRoomReq request = JoinRoomReq.Deserialize(body);
 
             Console.WriteLine($"Join Room: {request.SomeID}");
-            string jsonData = File.ReadAllText("rooms.json");
-            List<RoomInfoJson> roomInfoJsonList = JsonConvert.DeserializeObject<List<RoomInfoJson>>(jsonData);
-            List<RoomInfoJson> matchingRooms = roomInfoJsonList.Where(room => room.SomeID == request.SomeID).ToList();
 
-
-            string jsonPlayers = File.ReadAllText("players.json");
-            List<Player> playerInfoJsonList = JsonConvert.DeserializeObject<List<Player>>(jsonPlayers);
-
-            List<Player> RoomMaster = playerInfoJsonList.Where(player => player.IGN == "Nimonix").ToList();
 
 
             JoinRoomRes response = new JoinRoomRes();
@@ -350,33 +359,40 @@ namespace Gemnet.PacketProcessors
 
             response.UnknownValue3 = 6; // Slot ID 
 
-            foreach (var player in RoomMaster)
+            var roomData = GetRoomByID(request.SomeID);
+            var RoomMaster = GetPlayerByName(roomData.RoomMasterIGN);
+        
+            response.UnknownValue5 = RoomMaster.unknownValue1;
+            response.UnknownValue6 = RoomMaster.unknownValue2;
+
+            response.RoomMaster = roomData.RoomMasterIGN;
+            response.SomeID = roomData.SomeID;
+            response.UnknownValue7 = request.UnknownValue7; // P2P ID
+            response.RoomName = roomData.RoomName;
+            response.UnknownValue9 = roomData.unknownValue6;
+            response.MaxPlayers = roomData.MaxPlayers;
+            response.PlayerNumber = roomData.PlayerNumber + 1;
+            response.GameState = roomData.GameState;
+            response.unknownValue7 = roomData.unknownValue7;
+            response.MatchType = roomData.MatchType;
+            response.unknownValue8 = roomData.unknownValue8;
+            response.unknownValue9 = roomData.unknownValue9;
+            response.RoundNumber = roomData.RoundNumber;
+            response.GameMode = roomData.GameMode;
+            response.UnknownValue11 = roomData.unknownValue11;
+            response.UnknownValue12 = roomData.unknownValue12;
+            response.Country = "US";
+            response.Region = "NA";
+
+            var ign = "";
+
+            if (Server.clientUsernames.TryGetValue(stream, out string username))
             {
-                response.UnknownValue5 = player.unknownValue1;
-                response.UnknownValue6 = player.unknownValue2;
+                ign = username;
             }
-
-            foreach (var room in matchingRooms)
+            else
             {
-                response.RoomMaster = room.RoomMasterIGN;
-                response.SomeID = room.SomeID;
-                response.UnknownValue7 = request.UnknownValue7; // P2P ID
-                response.RoomName = room.RoomName;
-                response.UnknownValue9 = room.unknownValue6;
-                response.MaxPlayers = room.MaxPlayers;
-                response.PlayerNumber = room.PlayerNumber + 1;
-                response.GameState = room.GameState;
-                response.unknownValue7 = room.unknownValue7;
-                response.MatchType = room.MatchType;
-                response.unknownValue8 = room.unknownValue8;
-                response.unknownValue9 = room.unknownValue9;
-                response.RoundNumber = room.RoundNumber;
-                response.GameMode = room.GameMode;
-                response.UnknownValue11 = room.unknownValue11;
-                response.UnknownValue12 = room.unknownValue12;
-                response.Country = "US";
-                response.Region = "NA";
-
+                ign = "UnknownUser";
             }
 
             int[] itemID = { 1000175, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 2030058 };
@@ -385,7 +401,7 @@ namespace Gemnet.PacketProcessors
                 unknownValue1 = 6,
                 unknownValue2 = 1,
                 EXP = 1337,
-                IGN = "Gemnet",
+                IGN = ign,
                 P2PID = request.UnknownValue7,
                 SomeID = request.SomeID,
                 ItemID = itemID,
@@ -401,11 +417,9 @@ namespace Gemnet.PacketProcessors
 
             };
 
-            playerInfoJsonList.Add(newPlayer);
-            string updatedPlayerData = JsonConvert.SerializeObject(playerInfoJsonList, Formatting.Indented);
+            players.Add(newPlayer);
+            UserJoined(type, 0x10, stream, ign);
 
-            // Write the JSON data back to rooms.json
-            File.WriteAllText("players.json", updatedPlayerData);
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
         }
@@ -413,15 +427,10 @@ namespace Gemnet.PacketProcessors
         public static void JoinGetPlayers(ushort type, ushort action, byte[] body, NetworkStream stream) {
             action++;
 
-            string jsonFilePath = "players.json";
-            string jsonData = File.ReadAllText(jsonFilePath);
-
-            List<PlayerInfo> playerInfoJson = JsonConvert.DeserializeObject<List<PlayerInfo>>(jsonData);
-
-            
             Console.WriteLine("Get Players");
 
             GetPlayersReq request = GetPlayersReq.Deserialize(body);
+            
             GetPlayersRes response = new GetPlayersRes();
 
 
@@ -435,8 +444,9 @@ namespace Gemnet.PacketProcessors
             response.unknownValue3 = 0;
             response.PlayerNumber = 2;
 
-
-            foreach (var player in playerInfoJson)
+            var roomID = GetRoomID(request.unknownValue2);
+            var playerData = GetPlayersInRoom(roomID);
+            foreach (var player in playerData)
             {
                 Console.WriteLine($"Get Player {player.IGN}");
 
@@ -475,44 +485,40 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public static void UserJoined(ushort type, ushort action, NetworkStream stream)
+        public static void UserJoined(ushort type, ushort action, NetworkStream stream, string IGN)
         {
             Console.WriteLine("Notify User Joined Message");
 
             UserJoinedRes response = new UserJoinedRes();
-            string jsonFilePath = "players.json";
-            string jsonData = File.ReadAllText(jsonFilePath);
 
-            List<PlayerInfo> playerInfoJson = JsonConvert.DeserializeObject<List<PlayerInfo>>(jsonData);
-            List<PlayerInfo> playerInfos = playerInfoJson.Where(player => player.IGN == "Gemnet").ToList();
 
 
             response.Action = action;
             response.Type = 576;
 
             response.unknownValue1 = 6; // Slot ID
+            var playerData = GetPlayerByName(IGN);
 
-            foreach (var player in playerInfos) {
-                response.Players.Add(new PlayerJoin {
-                    UserID = 2,
-                    IGN = player.IGN,
-                    unknownValue1 = 1,
-                    EXP = player.EXP,
-                    P2PID = player.P2PID,
-                    SomeID = player.SomeID,
-                    ItemID = player.ItemID,
-                    unknownValue2 = player.unknownValue4,
-                    unknownValue3 = player.unknownValue5,
-                    unknownValue4 = player.unknownValue6,
-                    unknownValue5 = player.unknownValue7,
-                    unknownValue6 = player.unknownValue8,
-                    unknownValue7 = player.unknownValue9,
-                    unknownValue8 = player.unknownValue10,
-                    Country = "US",
-                    Region = "NA"
-                });
+            response.Players.Add(new PlayerJoin {
+                UserID = 2,
+                IGN = playerData.IGN,
+                unknownValue1 = 1,
+                EXP = playerData.EXP,
+                P2PID = playerData.P2PID,
+                SomeID = playerData.SomeID,
+                ItemID = playerData.ItemID,
+                unknownValue2 = playerData.unknownValue4,
+                unknownValue3 = playerData.unknownValue5,
+                unknownValue4 = playerData.unknownValue6,
+                unknownValue5 = playerData.unknownValue7,
+                unknownValue6 = playerData.unknownValue8,
+                unknownValue7 = playerData.unknownValue9,
+                unknownValue8 = playerData.unknownValue10,
+                Country = "US",
+                Region = "NA"
+            });
 
-            }
+   
 
             byte[] data = { 0x02, 0x40, 0x00, 0x1b, 0x18, 0x00, 0x4E, 0x69 ,0x6D, 0x6F, 0x6E, 0x69, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
@@ -567,8 +573,17 @@ namespace Gemnet.PacketProcessors
 
             response.unknownValue1 = request.unknownValue1;
             response.unknownValue2 = request.unknownValue1;
+            var ign = "";
+            if (Server.clientUsernames.TryGetValue(stream, out string username))
+            {
+                ign = username;
+            }
+            else
+            {
+                ign = "UnknownUser";
+            }
 
-            response.IGN = "Gemnet";
+            response.IGN = ign;
 
             bool NOT = false;
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
@@ -585,9 +600,13 @@ namespace Gemnet.PacketProcessors
 
             response.Action = action;
             response.Type = 576;
+            Random random = new Random();
 
-            response.unknownValue1 = 0xff;
-            response.unknownValue2 = 0x45;
+            int rand1 = random.Next(1, 256);
+            int rand2 = random.Next(1, 256);
+
+            response.unknownValue1 = rand1;
+            response.unknownValue2 = rand2;
 
             response.unknownValue3 = request.unknownValue1;
             response.unknownValue5 = request.unknownValue3;
@@ -599,10 +618,8 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public static void LoadGame1(ushort type, ushort action, byte[] body, NetworkStream stream)
+        public static async Task LoadGame1(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
-           
-
             action = 0x15;
 
             LoadGameReq request = LoadGameReq.Deserialize(body);
@@ -624,7 +641,7 @@ namespace Gemnet.PacketProcessors
             response.unknownValue1 = request.unknownValue1;
 
             Console.WriteLine("Loading 1");
-
+            Task.Delay(10000);
             bool NOT = false;
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
 
@@ -638,6 +655,7 @@ namespace Gemnet.PacketProcessors
 
             Console.WriteLine("Loading 2");
             bool NOT = false;
+            Task.Delay(10000);
             _ = ServerHolder.ServerInstance.SendPacket(data, stream, NOT);
 
         }
