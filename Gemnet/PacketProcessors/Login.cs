@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using Org.BouncyCastle.Asn1.Ocsp;
 using static Program;
 using static Server;
+using System.Text;
 
 namespace Gemnet.PacketProcessors
 {
@@ -64,11 +65,12 @@ namespace Gemnet.PacketProcessors
                 response.Exp = LoginQuery.EXP;
                 response.Carats = LoginQuery.Carats;
                 response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
-                response.Token = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234";
+                response.Token = GenerateRandomString(30);
                 response.Region = "NA";
                 response.Country = "US";
                 response.ForumName = LoginQuery.ForumName;
                 
+                Console.WriteLine($"Token: {response.Token}");
 
                 clientUsernames.Add(stream, response.IGN);
 
@@ -77,6 +79,21 @@ namespace Gemnet.PacketProcessors
             }
 
            
+        }
+
+        static string GenerateRandomString(int length)
+        {
+            const string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"; // Add any other characters you want to include
+            Random random = new Random();
+            StringBuilder stringBuilder = new StringBuilder(length);
+
+            for (int i = 0; i < length; i++)
+            {
+                int index = random.Next(characters.Length);
+                stringBuilder.Append(characters[index]);
+            }
+
+            return stringBuilder.ToString();
         }
 
         public static void ServerTime(ushort type, ushort action, NetworkStream stream)
