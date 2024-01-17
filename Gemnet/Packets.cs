@@ -68,6 +68,7 @@ namespace Gemnet.Packets.Enums
             UNKNOWN_6 = 0x8a,
             BUY_ITEM = 0x80,
             OPEN_BOX = 0x9a,
+            UNKNOWN_10 = 0xc6,
 
         }
 

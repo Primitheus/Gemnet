@@ -641,7 +641,7 @@ namespace Gemnet.PacketProcessors
             response.unknownValue1 = request.unknownValue1;
 
             Console.WriteLine("Loading 1");
-            Task.Delay(10000);
+            //Task.Delay(10000);
             bool NOT = false;
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
 
@@ -655,7 +655,7 @@ namespace Gemnet.PacketProcessors
 
             Console.WriteLine("Loading 2");
             bool NOT = false;
-            Task.Delay(10000);
+            //Task.Delay(10000);
             _ = ServerHolder.ServerInstance.SendPacket(data, stream, NOT);
 
         }

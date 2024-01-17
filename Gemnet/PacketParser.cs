@@ -108,7 +108,7 @@ namespace SendPacket
                     break;
                 case ActionGeneral.UNKNOWN_1: // ACTION.UNKNOWN_1
                                               // Process UNKNOWN_1 action
-                    General.Unknown1(type, action, stream);
+                    General.GetAvatars(type, action, packetBody, stream);
                     break;
                 case ActionGeneral.UNKNOWN_2: // ACTION.UNKNOWN_2
                                               // Process UNKNOWN_2 action
@@ -124,7 +124,7 @@ namespace SendPacket
                     break;
                 case ActionGeneral.AVATAR_LIST: // ACTION.AVATAR_LIST
                                                 // Process AVATAR_LIST action
-                    General.GetAvatarList(type, action, stream);
+                    General.GetAvatarList(type, action, packetBody, stream);
                     break;
                 case ActionGeneral.GET_GRADE: // ACTION.GET_GRADE
                                               // Process GET_GRADE action
@@ -182,7 +182,7 @@ namespace SendPacket
                     Inventory.GetCash((ushort)(HeaderType.INVENTORY), action, packetBody, stream);
                     break;
                 case ActionInventory.UNKNOWN_6: // ACTION.UNKNOWN_6
-                    General.Unknown(type, action, stream);
+                    Inventory.Unknown6((ushort)(HeaderType.INVENTORY), action, packetBody, stream);
                     break;
                 case ActionInventory.BUY_ITEM: // ACTION.BUY_ITEM
                     Inventory.BuyItem(type, action, packetBody, stream);
@@ -190,7 +190,9 @@ namespace SendPacket
 
                 case ActionInventory.OPEN_BOX: // ACTION.BUY_ITEM
                     Inventory.OpenBox(type, action, packetBody, stream);
-
+                    break;
+                case ActionInventory.UNKNOWN_10: // ACTION.UNKNOWN_10
+                    //General.Unknown(type, action, stream);
                     break;
                 default:
                     Console.WriteLine($"Unknown action for Inventory packet: {action}");
@@ -234,7 +236,7 @@ namespace SendPacket
                     break;
                 case ActionQuery.UNKNOWN_8: // ACTION.UNKNOWN_8
                                             // Process UNKNOWN_8 action
-                    Query.Unknown8(type, action, stream);
+                    //Query.Unknown8(type, action, stream);
                     break;
                 case ActionQuery.UNKNOWN_9: // ACTION.UNKNOWN_9
                                             // Process UNKNOWN_9 action
