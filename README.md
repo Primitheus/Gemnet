@@ -17,6 +17,8 @@ No testing or plans is currently being made for anything specific to Gem Fighter
 - In Progress
     * Lobby
     * Create/Join Rooms
+    * Avatar List
+    * Inventory Improvements
 
 - TODO
     * ProudNet Emulation
@@ -24,7 +26,6 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Buddy List
     * Chat
     * Megaphone
-    * Avatar List
     * InGame & Account Character Creation
     * Guilds
     * Name Change
@@ -37,10 +38,10 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Opening Boxes/Packages
     * Medal Shop
     * Match Rewards
-    * Item equip persistence.
+    * Item equipping + persistence.
  
 - Major Bugs
-    * Crashing most of the time (almost 100%) when starting a match with two players.
+    * Crashing most of the time (almost 100%) when starting a match with two players. [Crashing has been reduced to only 1 client crashing, however it still needs testing, unsure of success rate of the first client proceeding]
     * Player Information isn't accurately displaying in rooms.
     * Unknown Room Master identifier, Unknown position updating inside rooms.
     * Medals not showing. (Unknown field somewhere)
@@ -52,6 +53,5 @@ No testing or plans is currently being made for anything specific to Gem Fighter
 
 ## Credits
   - Configuration and Persistence Model
-    
     * [d3v11401](https://github.com/d3v1l401)
     * [demonofpower](https://github.com/demonofpower)
