@@ -9,6 +9,7 @@ using static Gemnet.Packets.Enums.Packets;
 public class Server
 {
     public static Dictionary<NetworkStream, string> clientUsernames = new Dictionary<NetworkStream, string>();
+    public static Dictionary<NetworkStream, int> clientUserID = new Dictionary<NetworkStream, int>();
 
     private const int MaxBufferSize = 1440;
     private const int PacketHeaderSize = 6; // 2 bytes for type + 2 bytes for length + 2 bytes for action

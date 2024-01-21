@@ -9,7 +9,7 @@ public class ModelAccount : IModel
     public int EXP;
     public int Carats;
     public int Astros;
-    public string Password; // TODO: Blake2 hashing
+    public string Password; // TODO: hashing
     public string ForumName;
     public int State;
 

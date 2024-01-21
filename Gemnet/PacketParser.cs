@@ -89,7 +89,7 @@ namespace SendPacket
         public void ProcessGeneralPacket(ushort action, byte[] packetBody, NetworkStream stream)
         {
             String TypeName = Enum.GetName(HeaderType.GENERAL);
-            String headerAction = headerAction = Enum.GetName((ActionGeneral)action);
+            String headerAction = Enum.GetName((ActionGeneral)action);
 
             Console.WriteLine($"Received packet: Type={TypeName}, Action={headerAction}"); // Body={BitConverter.ToString(packetBody, NetworkStream stream)}
             ushort type = (ushort)HeaderType.GENERAL;
@@ -137,7 +137,6 @@ namespace SendPacket
                 case ActionGeneral.QUESTS: // ACTION.UNKNOWN_5
                                               // Process UNKNOWN_5 action
                     General.Quests(type, action, packetBody, stream);
-
                     break;
                 case ActionGeneral.BUYING: // ACTION.BUYING
                                            // Process BUYING action
@@ -232,7 +231,7 @@ namespace SendPacket
             {
                 case ActionQuery.EQUIPPED_AVATAR: // ACTION.EQUIPPED_AVATAR
                                                   // Process EQUIPPED_AVATAR action
-                    Query.GetEquippedAvatar(type, action, stream);
+                    Query.GetEquippedAvatar(type, action, packetBody, stream);
                     break;
                 case ActionQuery.UNKNOWN_8: // ACTION.UNKNOWN_8
                                             // Process UNKNOWN_8 action

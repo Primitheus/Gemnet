@@ -9,6 +9,7 @@ using static Program;
 using Newtonsoft.Json;
 using System.Globalization;
 using Org.BouncyCastle.Asn1.Ocsp;
+using Gemnet.Persistence.Models;
 
 
 namespace Gemnet.PacketProcessors
@@ -44,14 +45,38 @@ namespace Gemnet.PacketProcessors
 
 
 
-        public static void GetEquippedAvatar(ushort type, ushort action, NetworkStream stream)
+        public static void GetEquippedAvatar(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
+            EquippedAvatarRes response = new EquippedAvatarRes();
+            response.Type = type;
+            response.Action = action;
+
             Console.WriteLine($"Get Equipped Avatar");
-            byte[] data = { 0x00, 0x40, 0x00, 0x0a, 0xa1, 0x00, 0xd3, 0xfa, 0x23, 0x00 };
+            Server.clientUserID.TryGetValue(stream, out int UserID);
 
-            _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+            //byte[] data = { 0x00, 0x40, 0x00, 0x0a, 0xa1, 0x00, 0xd3, 0xfa, 0x23, 0x00 };
+            
+            var AvatarQuery = ServerHolder.DatabaseInstance.Select<ModelAvatar>(ModelAvatar.QueryGetAvatarIDs, new
+            {
+                ID = UserID,
+            });
 
+            int AvatarID = 0;
+
+            if (AvatarQuery != null && AvatarQuery.Any())
+            {
+                AvatarID = AvatarQuery.First().AvatarID;
+            }
+            else
+            {
+                Console.WriteLine("No Avatar Found");
+                return;
+            }
+
+            response.AvatarID = AvatarID;
+            
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
         }
 
@@ -130,7 +155,7 @@ namespace Gemnet.PacketProcessors
 
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
-            int[] itemID = { 1000175, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 2030058 };
+            int[] itemID = { 1000175, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0 };
 
             Player newPlayer = new Player {
                 unknownValue1 = 0,
@@ -395,7 +420,7 @@ namespace Gemnet.PacketProcessors
                 ign = "UnknownUser";
             }
 
-            int[] itemID = { 1000175, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 2030058 };
+            int[] itemID = { 1000175, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0 };
 
             Player newPlayer = new Player {
                 unknownValue1 = 6,
@@ -446,6 +471,8 @@ namespace Gemnet.PacketProcessors
 
             var roomID = GetRoomID(request.unknownValue2);
             var playerData = GetPlayersInRoom(roomID);
+
+            
             foreach (var player in playerData)
             {
                 Console.WriteLine($"Get Player {player.IGN}");
@@ -642,7 +669,7 @@ namespace Gemnet.PacketProcessors
 
             Console.WriteLine("Loading 1");
             //Task.Delay(10000);
-            bool NOT = false;
+            bool NOT = true;
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
 
         }
@@ -654,7 +681,7 @@ namespace Gemnet.PacketProcessors
             byte[] data = { 0x02, 0x40, 0x00, 0x0e, 0x24, 0x00, 0x07, 0x02, 0x01, 0x03, 0x04, 0x00, 0x06, 0x05};
 
             Console.WriteLine("Loading 2");
-            bool NOT = false;
+            bool NOT = true;
             //Task.Delay(10000);
             _ = ServerHolder.ServerInstance.SendPacket(data, stream, NOT);
 

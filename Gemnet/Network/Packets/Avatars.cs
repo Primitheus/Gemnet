@@ -14,7 +14,7 @@ namespace Gemnet.Network.Packets
 
         private struct PropertyOffsets
         {
-            public static readonly int UserID = 0;
+            public static readonly int UserID = 6;
 
         }
         public new static AvatarListReq Deserialize(byte[] data)
@@ -27,7 +27,7 @@ namespace Gemnet.Network.Packets
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            packet.UserID = BitConverter.ToInt32(data, PropertyOffsets.UserID);
+            packet.UserID = Convert.ToInt32(data[PropertyOffsets.UserID]);
 
             return packet;
         }
@@ -40,8 +40,8 @@ namespace Gemnet.Network.Packets
 
         private struct PropertyOffsets
         {   
-            public static readonly int AvatarCount = 0;
-            public static readonly int AvatarID = 1;
+            public static readonly int AvatarCount = 6;
+            public static readonly int AvatarID = 7;
 
         }
         public override byte[] Serialize()
@@ -49,8 +49,9 @@ namespace Gemnet.Network.Packets
 
             AvatarCount = AvatarID.Length;
 
-            byte[] buffer = new byte[Size];
             Size = (ushort)((AvatarCount * 4) + 8);
+            byte[] buffer = new byte[Size];
+
 
             int offset = 0;
             var i = 0;
@@ -76,7 +77,7 @@ namespace Gemnet.Network.Packets
 
         private struct PropertyOffsets
         {
-            public static readonly int AvatarID = 0;
+            public static readonly int AvatarID = 6;
 
         }
         public new static AvatarListItemsReq Deserialize(byte[] data)
@@ -103,26 +104,52 @@ namespace Gemnet.Network.Packets
         private struct PropertyOffsets
         {   
 
-            public static readonly int ServerID = 1;
+            public static readonly int ServerID = 6;
 
         }
         public override byte[] Serialize()
         {
+            Size = (ushort)(( ServerID.Length * 4) + 178 + 4);
 
             byte[] buffer = new byte[Size];
-            Size = (ushort)((ServerID.Length * 4) + 8);
-
             int offset = 0;
             var i = 0;
 
             base.Serialize().CopyTo(buffer, offset);
+            offset += 6;
 
             foreach (var serverid in ServerID)
             {
-                BitConverter.GetBytes(serverid).CopyTo(buffer, PropertyOffsets.ServerID + i);
+                BitConverter.GetBytes(serverid).CopyTo(buffer, PropertyOffsets.ServerID+i);
                 i += 4;
             }
 
+            return buffer;
+        }
+    }
+
+    public class EquippedAvatarRes : HeaderPacket
+    {   
+        public int AvatarID { get; set; }
+
+        private struct PropertyOffsets
+        {   
+
+            public static readonly int AvatarID = 6;
+
+        }
+        public override byte[] Serialize()
+        {
+            Size = 10;
+
+            byte[] buffer = new byte[Size];
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+            offset += 6;
+
+            BitConverter.GetBytes(AvatarID).CopyTo(buffer, PropertyOffsets.AvatarID);
+        
 
             return buffer;
         }

@@ -73,7 +73,7 @@ namespace Gemnet.PacketProcessors
                 Console.WriteLine($"Token: {response.Token}");
 
                 clientUsernames.Add(stream, response.IGN);
-
+                clientUserID.Add(stream, response.UserID);
 
                 _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
             }
