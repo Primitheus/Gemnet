@@ -283,6 +283,12 @@ namespace SendPacket
                 case ActionQuery.END_MATCH:
                     Query.GetReward(type, action, packetBody, stream);
                     break;
+                case ActionQuery.MATCH_REWARD:
+                    Query.GetReward(type, action, packetBody, stream);
+                    break;
+                case ActionQuery.CHAT:
+                    Query.Chat(type, action, packetBody, stream);
+                    break;
                 //case ActionQuery.EQUIPPING: // ACTION.EQUIPPING
                                             // Process EQUIPPING action
                     //Query.Unknown8(type, action);

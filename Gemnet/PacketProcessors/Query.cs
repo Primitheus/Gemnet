@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Globalization;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Gemnet.Persistence.Models;
+using Org.BouncyCastle.Crypto.Prng;
 
 
 namespace Gemnet.PacketProcessors
@@ -557,6 +558,76 @@ namespace Gemnet.PacketProcessors
 
 
         }
+
+        public static void Chat(ushort type, ushort action, byte[] body, NetworkStream stream) 
+        {
+
+            action = 0x12;
+            type = 576;
+
+            ChatReq request = ChatReq.Deserialize(body);
+            Console.WriteLine($"Chat Message: {request.Message}");
+
+            ChatRes response = new ChatRes();
+
+            response.Type = type;
+            response.Action = action;
+
+
+            Server.clientUsernames.TryGetValue(stream, out string UserIGN);
+            bool NOT = false;
+
+            if (request.Message.StartsWith("/give"))
+            {
+                var parts = request.Message.Split(' ');
+
+                if (parts.Length >= 3)
+                {
+                    var player = parts[1];
+                    var item = parts[2];
+                    var amount = parts.Length > 3 ? int.Parse(parts[3]) : 1; // Default amount is 1 if not specified
+                    
+                    var QueryID = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryGetIdFromUsername, new 
+                    {
+                        username = player 
+                    });
+
+                    if (QueryID != null && QueryID.Any()) 
+                    {
+                        if (item == "carats" && amount > 0) {
+                            ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryAddCarats, new 
+                            {
+                                amount,
+                                ID = QueryID.First().UUID,
+                            });
+                            response.Message = $"{UserIGN} Gave {player} {amount} Carats.";
+                        } else if (item == "astros" && amount > 0) {
+                            ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryAddAstros, new 
+                            {
+                                amount,
+                                ID = QueryID.First().UUID,
+                            });
+                            response.Message = $"{UserIGN} Gave {player} {amount} Astros.";
+                        } else {
+                            response.Message = $"Incorrect or Invalid Arguments.";
+                        }
+                    }
+                }
+                else
+                {  
+                    response.Message = $"Incorrect or Invalid Arguments.";
+
+                }
+            } else {
+                response.Message = request.Message;
+            }
+
+
+            response.UserIGN = UserIGN;
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, NOT);
+
+        }
+
         public static void GetReward(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;

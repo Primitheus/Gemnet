@@ -91,6 +91,8 @@ namespace Gemnet.Packets.Enums
             LOADING_GAME_2 = 0x62,
             EQUIPPING = 0xa4,
             END_MATCH = 0xb0,
+            MATCH_REWARD = 0x68,
+            CHAT = 0x40,
 
         }  
 

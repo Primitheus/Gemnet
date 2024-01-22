@@ -24,7 +24,7 @@ public class Server
 
     public Server(IPAddress ipAddress, int port)
     {
-        tcpListener = new TcpListener(ipAddress, port);
+        tcpListener = new TcpListener(IPAddress.Any, port);
 
     }
 

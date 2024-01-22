@@ -22,13 +22,15 @@ namespace Gemnet.PacketProcessors
 
             action++;
 
+            Server.clientUserID.TryGetValue(stream, out int UserID);
+
             GetCashRes response = new GetCashRes();
 
             response.Type = type;
             response.Action = action;
 
-            response.UserID = 1;
-            response.Astros = 0;
+            response.UserID = UserID;
+            response.Astros = 1000000;
             response.Medals = 0;
 
             Console.WriteLine($"Get Cash: Astros={response.Astros}, Medals={response.Medals}");

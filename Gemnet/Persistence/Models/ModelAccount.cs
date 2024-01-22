@@ -12,6 +12,7 @@ public class ModelAccount : IModel
     public string Password; // TODO: hashing
     public string ForumName;
     public int State;
+    
 
     /* public int State;
     public DateTime LastLogin;
@@ -36,8 +37,9 @@ public class ModelAccount : IModel
 
     public static readonly string QueryCashCarats = "SELECT Carats FROM rumblefighter.accounts WHERE UUID = @ID";
     public static readonly string QueryCashAstros = "SELECT Astros FROM rumblefighter.accounts WHERE UUID = @ID";
-
-
+    public static readonly string QueryAddCarats = "UPDATE accounts SET Carats = Carats + @amount WHERE UUID = @ID";
+    public static readonly string QueryAddAstros = "UPDATE accounts SET Astros = Astros + @amount WHERE UUID = @ID";
+    public static readonly string QueryGetIdFromUsername = "SELECT UUID FROM accounts WHERE IGN = @username";
 
     public static readonly int TableCreationOrder = 999;
 }
