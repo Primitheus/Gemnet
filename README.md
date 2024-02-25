@@ -20,14 +20,14 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Avatar List
     * Item equipping + persistence.
     * Inventory Improvements
-
+    * Chat
+   
 - TODO
     * ProudNet Emulation
     * Gift List
     * Buddy List
-    * Chat
     * Megaphone
-    * InGame & Account Character Creation
+    * Character Creation
     * Guilds
     * Name Change
     * Enchantment & Avalon
@@ -39,7 +39,8 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Opening Boxes/Packages
     * Medal Shop
     * Match Rewards
- 
+    * Quests
+      
 - Major Bugs
     * Crashing most of the time (almost 100%) when starting a match with two players. [Crashing has been reduced to only 1 client crashing, however it still needs testing, unsure of success rate of the first client proceeding]
     * Player Information isn't accurately displaying in rooms.
