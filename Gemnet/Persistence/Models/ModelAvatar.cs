@@ -107,8 +107,11 @@ public static readonly string QueryCreateTable = @"CREATE TABLE IF NOT EXISTS `a
     public static readonly string QueryGetAvatarIDs = "SELECT AvatarID FROM rumblefighter.avatar WHERE OwnerID = @ID";
 
     public static readonly string QueryGetAvatarData = "SELECT `Job`, `Hair`, `Forehead`, `Top`, `Bottom`, `Gloves`, `Shoes`, `Eyes`, `Nose`, `Mouth`, `Scroll`, `ExoA`, `ExoB`, `Null`, `Back`, `Neck`, `Ears`, `Glasses`, `Mask`, `Waist`, `Scroll_BU`, `Unknown_1`, `Unknown_2`, `Inventory_1`, `Inventory_2`, `Inventory_3`, `Unknown_3`, `Unknown_4`, `Unknown_5`, `Unknown_6`, `Unknown_7`, `Title`, `Merit`, `Avalon`, `Hair_BP`, `Top_BP`, `Bottom_BP`, `Gloves_BP`, `Shoes_BP`, `Back_BP`, `Neck_BP`, `Ears_BP`, `Glasses_BP`, `Mask_BP`, `Waist_BP` FROM `avatar` WHERE `AvatarID` = @AID";
-
-
+    public static string GetQueryUpdateAvatar(string slotName)
+    {
+        // Validate and sanitize slotName here to prevent SQL injection
+        return $"UPDATE rumblefighter.avatar SET `{slotName}` = @ServerID WHERE `AvatarID` = @AID";
+    }
     public static readonly int TableCreationOrder = 999;
 
     public object AvatarProperties { get; internal set; }

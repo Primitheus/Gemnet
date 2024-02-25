@@ -155,5 +155,124 @@ namespace Gemnet.Network.Packets
         }
     }
 
+    public class UpdateAvatarReq : HeaderPacket
+    {
+        public int AvatarID { get; set; }
+        public int Slot { get; set; }
+        public int ServerID { get; set; }
+
+        private struct PropertyOffsets
+        {
+            public static readonly int AvatarID = 6;
+            public static readonly int Slot = 9;
+            public static readonly int ServerID = 11;
+        
+
+        }
+        public new static UpdateAvatarReq Deserialize(byte[] data)
+        {
+            UpdateAvatarReq packet = new UpdateAvatarReq();
+
+            int offset = 6;
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.AvatarID = BitConverter.ToInt32(data, PropertyOffsets.AvatarID);
+            packet.Slot = ToUInt16BigEndian(data, PropertyOffsets.Slot);
+            packet.ServerID = BitConverter.ToInt32(data, PropertyOffsets.ServerID);
+
+
+            return packet;
+        }
+
+
+    }
+
+    public class UpdateAvatarRes : HeaderPacket
+    {   
+        public int Result { get; set; }
+
+        private struct PropertyOffsets
+        {   
+
+
+        }
+        public override byte[] Serialize()
+        {
+            Size = 6;
+
+            byte[] buffer = new byte[Size];
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+            offset += 6;
+
+            //BitConverter.GetBytes(AvatarID).CopyTo(buffer, PropertyOffsets.AvatarID)        
+
+            return buffer;
+        }
+    }
+
+    public class ClearAvatarSlotReq : HeaderPacket
+    {
+        public int AvatarID { get; set; }
+        public int Slot { get; set; }
+
+        private struct PropertyOffsets
+        {
+            public static readonly int AvatarID = 6;
+            public static readonly int Slot = 9;
+        
+
+        }
+        public new static ClearAvatarSlotReq Deserialize(byte[] data)
+        {
+            ClearAvatarSlotReq packet = new ClearAvatarSlotReq();
+
+            int offset = 6;
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.AvatarID = BitConverter.ToInt32(data, PropertyOffsets.AvatarID);
+            packet.Slot = ToUInt16BigEndian(data, PropertyOffsets.Slot);
+
+
+            return packet;
+        }
+
+
+    }
+
+    public class ClearAvatarSlotRes : HeaderPacket
+    {   
+        public int Result { get; set; }
+
+        private struct PropertyOffsets
+        {   
+
+        }
+        public override byte[] Serialize()
+        {
+            Size = 6;
+
+            byte[] buffer = new byte[Size];
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+            offset += 6;
+
+            //BitConverter.GetBytes(AvatarID).CopyTo(buffer, PropertyOffsets.AvatarID)        
+
+            return buffer;
+        }
+    }
+
+
+
+
 }
 

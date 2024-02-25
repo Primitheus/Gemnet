@@ -49,7 +49,7 @@ namespace SendPacket
         public void ProcessLoginPacket(ushort action, byte[] packetBody, NetworkStream stream)
         {
             String TypeName = Enum.GetName(HeaderType.LOGIN);
-            String headerAction = headerAction = Enum.GetName((ActionLogin)action);
+            String headerAction = Enum.GetName((ActionLogin)action);
 
             Console.WriteLine($"Received packet: Type={TypeName}, Action={headerAction}"); // Body={BitConverter.ToString(packetBody)}
             ushort type = (ushort)HeaderType.LOGIN;
@@ -66,7 +66,7 @@ namespace SendPacket
                 case ActionLogin.SERVER_TIME:
                     Login.ServerTime((ushort)HeaderType.LOGIN, action, stream);
                     break;
-                case ActionLogin.ACCOUNT_CREATION:
+                case ActionLogin.CREATE_ACCOUNT:
                     // Process ACCOUNT_CREATION
                     break;
                 case ActionLogin.CASH_UNKNOWN:
@@ -156,6 +156,9 @@ namespace SendPacket
                 case ActionGeneral.GET_ZM_STATS_2:
                     General.GetZMStats2(type, action, packetBody, stream);
                     break;
+                case ActionGeneral.CHAT:
+                    General.GlobalChat(type, action, packetBody, stream);
+                    break;
                 default:
                     Console.WriteLine($"Unknown action for General packet: {action}");
                     break;
@@ -165,7 +168,7 @@ namespace SendPacket
         public void ProcessInventoryPacket(ushort action, byte[] packetBody, NetworkStream stream)
         {
             String TypeName = Enum.GetName(HeaderType.INVENTORY);
-            String headerAction = headerAction = Enum.GetName((ActionInventory)action);
+            String headerAction = Enum.GetName((ActionInventory)action);
 
             Console.WriteLine($"Received packet: Type={TypeName}, Action={headerAction}"); // Body={BitConverter.ToString(packetBody, NetworkStream stream)}
 
@@ -180,7 +183,7 @@ namespace SendPacket
                 case ActionInventory.CASH: // ACTION.CASH
                     Inventory.GetCash((ushort)(HeaderType.INVENTORY), action, packetBody, stream);
                     break;
-                case ActionInventory.UNKNOWN_6: // ACTION.UNKNOWN_6
+                case ActionInventory.ADD_ITEM: // ACTION.UNKNOWN_6
                     Inventory.Unknown6((ushort)(HeaderType.INVENTORY), action, packetBody, stream);
                     break;
                 case ActionInventory.BUY_ITEM: // ACTION.BUY_ITEM
@@ -202,7 +205,7 @@ namespace SendPacket
         public void ProcessGameGuardPacket(ushort action, byte[] packetBody, NetworkStream stream)
         {
             String TypeName = Enum.GetName(HeaderType.GAMEGUARD);
-            String headerAction = headerAction = Enum.GetName((ActionGG)action);
+            String headerAction = Enum.GetName((ActionGG)action);
 
             Console.WriteLine($"Received packet: Type={TypeName}, Action={headerAction}"); // Body={BitConverter.ToString(packetBody, NetworkStream stream)}
             ushort type = (ushort)(HeaderType.GAMEGUARD);
@@ -221,7 +224,7 @@ namespace SendPacket
         public void ProcessQueryPacket(ushort action, byte[] packetBody, NetworkStream stream)
         {
             String TypeName = Enum.GetName(HeaderType.QUERY);
-            String headerAction = headerAction = Enum.GetName((ActionQuery)action);
+            String headerAction = Enum.GetName((ActionQuery)action);
 
             Console.WriteLine($"Received packet: Type={TypeName}, Action={headerAction}"); // Body={BitConverter.ToString(packetBody)}
 
@@ -233,13 +236,13 @@ namespace SendPacket
                                                   // Process EQUIPPED_AVATAR action
                     Query.GetEquippedAvatar(type, action, packetBody, stream);
                     break;
-                case ActionQuery.UNKNOWN_8: // ACTION.UNKNOWN_8
+                case ActionQuery.CLEAR_AVATAR_SLOT: // ACTION.UNKNOWN_8
                                             // Process UNKNOWN_8 action
-                    //Query.Unknown8(type, action, stream);
+                    Query.ClearAvatarSlot(type, action, packetBody, stream);
                     break;
-                case ActionQuery.UNKNOWN_9: // ACTION.UNKNOWN_9
+                case ActionQuery.UPDATE_AVATAR: // ACTION.UNKNOWN_9
                                             // Process UNKNOWN_9 action
-                    Query.Unknown9(type, action, stream);
+                    Query.UpdateAvatar(type, action, packetBody, stream);
                    break;
                 case ActionQuery.GET_ROOM: // ACTION.GET_ROOM
                            // Process GET_ROOM action

@@ -5,12 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gemnet.Network.Packets;
+using static Gemnet.AvatarDef.Enums.AvatarDef;
 using static Program;
 using Newtonsoft.Json;
 using System.Globalization;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Gemnet.Persistence.Models;
 using Org.BouncyCastle.Crypto.Prng;
+using Org.BouncyCastle.Asn1.Cmp;
 
 
 namespace Gemnet.PacketProcessors
@@ -81,26 +83,56 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public static void Unknown8(ushort type, ushort action, NetworkStream stream)
+        public static void ClearAvatarSlot(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
-            Console.WriteLine($"Unknown 8");
+            
+            ClearAvatarSlotReq request = ClearAvatarSlotReq.Deserialize(body);
+            ClearAvatarSlotRes response = new ClearAvatarSlotRes();
 
-            byte[] data = { 0x00, 0x40, 0x00, 0x06, 0xa7, 0x00 };
+            response.Type = type;
+            response.Action = action; 
 
-            _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+            String SlotName = Enum.GetName(typeof(SlotName), request.Slot);
+
+            Console.WriteLine($"Clear Avatar: {request.AvatarID} Slot: {SlotName}");    
+
+            var Query = ModelAvatar.GetQueryUpdateAvatar(SlotName);
+            int ServerID = 0;
+            var QueryUpdate = ServerHolder.DatabaseInstance.Select<ModelAvatar>(Query, new 
+            {
+                ServerID,
+                AID = request.AvatarID,
+            });
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
 
         }
         
-        public static void Unknown9(ushort type, ushort action, NetworkStream stream)
+        public static void UpdateAvatar(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
-            Console.WriteLine("Unknown 9");
+            UpdateAvatarReq request = UpdateAvatarReq.Deserialize(body);
+            UpdateAvatarRes response = new UpdateAvatarRes();
 
-            byte[] data = { 0x00, 0x40, 0x00, 0x06, 0xa5, 0x00 };
+            response.Type = type;
+            response.Action = action;
 
-            _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+            String SlotName = Enum.GetName(typeof(SlotName), request.Slot);
+
+            Console.WriteLine($"Update: Avatar {request.AvatarID}, {request.Slot}, {SlotName}, {request.ServerID}");        
+
+            var Query = ModelAvatar.GetQueryUpdateAvatar(SlotName);
+
+            var QueryUpdate = ServerHolder.DatabaseInstance.Select<ModelAvatar>(Query, new 
+            {
+                request.ServerID,
+                AID = request.AvatarID,
+            });
+
+            
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
         }
 
         public static void CreateRoom(ushort type, ushort action, byte[] body, NetworkStream stream) {
@@ -579,13 +611,13 @@ namespace Gemnet.PacketProcessors
 
             if (request.Message.StartsWith("/give"))
             {
-                var parts = request.Message.Split(' ');
+                var arguements = request.Message.Split(' ');
 
-                if (parts.Length >= 3)
+                if (arguements.Length >= 3)
                 {
-                    var player = parts[1];
-                    var item = parts[2];
-                    var amount = parts.Length > 3 ? int.Parse(parts[3]) : 1; // Default amount is 1 if not specified
+                    var player = arguements[1];
+                    var item = arguements[2];
+                    var amount = arguements.Length > 3 ? int.Parse(arguements[3]) : 1; // Default amount is 1 if not specified
                     
                     var QueryID = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryGetIdFromUsername, new 
                     {

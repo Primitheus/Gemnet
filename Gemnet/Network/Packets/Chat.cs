@@ -46,7 +46,6 @@ namespace Gemnet.Network.Packets
             public static readonly int UserIGN = 6;
             public static readonly int Message = 26;
 
-
         }
 
         public override byte[] Serialize()
@@ -66,5 +65,61 @@ namespace Gemnet.Network.Packets
             return buffer;
         }
     }
+
+    public class GlobalChatReq : HeaderPacket
+    {
+        public string UserIGN {get; set;}
+        private struct PropertyOffsets
+        {
+            public static readonly int UserIGN = 6;
+
+        }
+
+        public new static GlobalChatReq Deserialize(byte[] data)
+        {
+            GlobalChatReq packet = new GlobalChatReq();
+
+            int offset = 6;
+            int nullTerminator = 0;
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.UserIGN = Encoding.ASCII.GetString(data, PropertyOffsets.UserIGN, 20);
+
+            return packet;
+        }
+    }
+
+    public class GlobalChatRes : HeaderPacket
+    {
+        public int UserID {get; set;}
+        public string UserIGN {get; set;}
+
+        private struct PropertyOffsets
+        {
+            public static readonly int UserID = 6;
+            public static readonly int UserIGN = 10;
+        }
+
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[30];
+            Size = (ushort)buffer.Length;
+            
+            int offset = 0;
+            base.Serialize().CopyTo(buffer, offset);
+            
+            BitConverter.GetBytes(UserID).CopyTo(buffer, PropertyOffsets.UserID);
+            Encoding.ASCII.GetBytes(UserIGN).CopyTo(buffer, PropertyOffsets.UserIGN);
+
+
+            return buffer;
+        }
+    }
+
 }
 

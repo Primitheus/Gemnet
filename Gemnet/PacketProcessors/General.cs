@@ -394,7 +394,6 @@ namespace Gemnet.PacketProcessors
 
 
         }
-
         public static void GetZMStats2(ushort type, ushort action, byte[] body, NetworkStream stream) 
         {
             action++;
@@ -412,11 +411,31 @@ namespace Gemnet.PacketProcessors
                 _ = ServerHolder.ServerInstance.SendPacket(data, stream);
 
             }
+        }
+
+        public static void GlobalChat(ushort type, ushort action, byte[] body, NetworkStream stream) 
+        {
+            action++;
+            
+
+            GlobalChatReq request = GlobalChatReq.Deserialize(body);
+            GlobalChatRes response = new GlobalChatRes();
+
+            Console.WriteLine($"Global Chat From: {request.UserIGN}");
+
+            Server.clientUserID.TryGetValue(stream, out int UserID);
+
+            response.Action = action;
+            response.Type = type;
+            
+            response.UserIGN = request.UserIGN;
+            response.UserID = UserID;
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+
 
 
         }
-
-
     }
 
 }
