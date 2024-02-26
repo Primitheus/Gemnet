@@ -29,7 +29,7 @@ public class ModelInventory : IModel
     public static readonly string GetServerID = "SELECT ServerID FROM rumblefighter.inventory WHERE OwnerID = @OID ORDER BY ServerID DESC LIMIT 1";
     public static readonly string GetInventory = "SELECT * FROM rumblefighter.inventory WHERE OwnerID = @OID";
     public static readonly string DeleteItem = "DELETE FROM rumblefighter.inventory WHERE ServerID = @SID";
-
+    public static readonly string GetItemFromServerID = "SELECT * FROM rumblefighter.inventory WHERE ServerID = @SID";
     public static readonly int TableCreationOrder = 998;
 
 }
