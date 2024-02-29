@@ -27,6 +27,7 @@ No testing or plans is currently being made for anything specific to Gem Fighter
     * Gift List
     * Buddy List
     * Megaphone
+    * Timed Items
     * Character Creation
     * Guilds
     * Name Change
