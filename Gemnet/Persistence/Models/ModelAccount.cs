@@ -12,7 +12,7 @@ public class ModelAccount : IModel
     public string Password; // TODO: hashing
     public string ForumName;
     public int State;
-    
+    public int CurrentAvatar;
 
     /* public int State;
     public DateTime LastLogin;
@@ -29,6 +29,7 @@ public class ModelAccount : IModel
                                                               `Astros` int NOT NULL DEFAULT '0',
                                                               `ForumName` varchar(50) NOT NULL,
                                                               `State` int NOT NULL DEFAULT '0',
+                                                              `CurrentAvatar` int NOT NULL DEFAULT '0',
                                                               PRIMARY KEY (`UUID`)
                                                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
 
@@ -40,6 +41,8 @@ public class ModelAccount : IModel
     public static readonly string QueryAddCarats = "UPDATE accounts SET Carats = Carats + @amount WHERE UUID = @ID";
     public static readonly string QueryAddAstros = "UPDATE accounts SET Astros = Astros + @amount WHERE UUID = @ID";
     public static readonly string QueryGetIdFromUsername = "SELECT UUID FROM accounts WHERE IGN = @username";
+    public static readonly string QueryUpdateAvatar = "UPDATE accounts SET CurrentAvatar = @avatar WHERE UUID = @ID";
+
 
     public static readonly int TableCreationOrder = 999;
 }
