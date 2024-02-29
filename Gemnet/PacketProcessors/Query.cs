@@ -52,31 +52,37 @@ namespace Gemnet.PacketProcessors
         {
             action++;
             EquippedAvatarRes response = new EquippedAvatarRes();
+            PlayerManager playerM = new PlayerManager();
+
             response.Type = type;
             response.Action = action;
 
             Console.WriteLine($"Get Equipped Avatar");
-            Server.clientUserID.TryGetValue(stream, out int UserID);
 
-            //byte[] data = { 0x00, 0x40, 0x00, 0x0a, 0xa1, 0x00, 0xd3, 0xfa, 0x23, 0x00 };
+            var UserID = playerM.GetPlayerUserID;
+            var AvatarID = playerM.GetPlayerCurrentAvatar(stream);
+
+            if (AvatarID == 0)
+            {
+                Console.WriteLine("No Avatar Equipped, Equipping Default Avatar");
+                var AvatarQuery = ServerHolder.DatabaseInstance.Select<ModelAvatar>(ModelAvatar.QueryGetAvatarIDs, new
+                {
+                    ID = UserID,
+                });
+
+                if (AvatarQuery != null && AvatarQuery.Any())
+                {
+                    AvatarID = AvatarQuery.First().AvatarID;
+                    playerM.UpdatePlayerCurrentAvatar(stream, AvatarID);
+                }
+                else
+                {
+                    Console.WriteLine("No Avatar Found");
+                    return;
+                }
+
+            } 
             
-            var AvatarQuery = ServerHolder.DatabaseInstance.Select<ModelAvatar>(ModelAvatar.QueryGetAvatarIDs, new
-            {
-                ID = UserID,
-            });
-
-            int AvatarID = 0;
-
-            if (AvatarQuery != null && AvatarQuery.Any())
-            {
-                AvatarID = AvatarQuery.First().AvatarID;
-            }
-            else
-            {
-                Console.WriteLine("No Avatar Found");
-                return;
-            }
-
             response.AvatarID = AvatarID;
             
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
