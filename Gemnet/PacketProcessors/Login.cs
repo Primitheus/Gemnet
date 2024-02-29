@@ -11,6 +11,15 @@ using System.Text;
 
 namespace Gemnet.PacketProcessors
 {
+    public enum AccountState
+    {
+        Active = 0,
+        Locked = 1,
+        TimedOut = 2,
+        Banned = 3
+    
+    }
+
     internal class Login
     {
         public static void VersionCheck(ushort type, ushort action, NetworkStream stream)
@@ -22,7 +31,7 @@ namespace Gemnet.PacketProcessors
 
 
         }
-
+        
         public static void CredentialCheck(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
@@ -38,61 +47,87 @@ namespace Gemnet.PacketProcessors
             Console.WriteLine($"[Auth] Type=0x{request.Type:X2}, Length={request.Size}, Action=0x{request.Action:X2}, Username='{request.Email}', Password={request.Password}");
 
 
-            if (LoginQuery == null)
-            {
-                Console.WriteLine("Username Or Password Incorrect.");
-
-                LoginFailRes response = new LoginFailRes();
-
-                response.Type = 528;
-                response.Action = 645;
-
-                response.Error = "Email or Password is Incorrect.";
-                response.Code = 29374;
-
-                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
-
-
-            } else {
-
-                LoginRes response = new LoginRes();
-                Random random = new Random();
-                int randomResult = random.Next(1, 101);
-                response.Type = type;
-                response.Action = action;
-                response.UserID = LoginQuery.UUID;
-                response.IGN = LoginQuery.IGN+(randomResult.ToString());
-                response.Exp = LoginQuery.EXP;
-                response.Carats = LoginQuery.Carats;
-                response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
-                response.Token = GenerateRandomString(30);
-                response.Region = "NA";
-                response.Country = "US";
-                response.ForumName = LoginQuery.ForumName;
-                
-                Console.WriteLine($"Token: {response.Token}");
-
-                PlayerManager.Player player = new PlayerManager.Player {
-
-                    UserID = response.UserID,
-                    UserIGN = response.IGN,
-                    Carats = response.Carats,
-                    EXP = response.Exp,
-                    Token = response.Token,
-                    ForumName = response.ForumName,
-                    Region = response.Region,
-                    Country = response.Country,
-                    GUID = response.GUID,
-                    CurrentAvatar = LoginQuery.CurrentAvatar,
-                    
+            static void SendLoginFailResponse(string errorMessage, NetworkStream stream)
+            {   
+                LoginFailRes response = new LoginFailRes
+                {
+                    Type = 528,
+                    Action = 645,
+                    Error = errorMessage,
+                    Code = 29374
                 };
-                
-                PlayerManager.Players.Add(stream, player);
-
-                clientUsernames.Add(stream, response.IGN);
-                clientUserID.Add(stream, response.UserID);
 
                 _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+            }
+
+        if (LoginQuery == null) {
+                
+                Console.WriteLine("Email or Password is incorrect.");
+                SendLoginFailResponse("Email or Password is incorrect.", stream);
+                return;
+        } else {
+
+            if (LoginQuery.State == (int)AccountState.Banned) {
+
+                Console.WriteLine("Account is Banned.");
+                SendLoginFailResponse("Account is Banned.", stream);
+                return;
+            }
+            
+            else if (LoginQuery.State == (int)AccountState.Locked)
+            {
+                Console.WriteLine("Account is Locked.");
+                SendLoginFailResponse("Account is Locked.", stream);
+                return;
+            }
+            else if (LoginQuery.State == (int)AccountState.TimedOut)
+            {
+                Console.WriteLine("Account is Timed Out.");
+                SendLoginFailResponse("Account is Timed Out.", stream);
+                return;
+            }
+
+            else {
+
+                    LoginRes response = new LoginRes();
+                    Random random = new Random();
+                    int randomResult = random.Next(1, 101);
+                    response.Type = type;
+                    response.Action = action;
+                    response.UserID = LoginQuery.UUID;
+                    response.IGN = LoginQuery.IGN+(randomResult.ToString());
+                    response.Exp = LoginQuery.EXP;
+                    response.Carats = LoginQuery.Carats;
+                    response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
+                    response.Token = GenerateRandomString(30);
+                    response.Region = "NA";
+                    response.Country = "US";
+                    response.ForumName = LoginQuery.ForumName;
+                    
+                    Console.WriteLine($"Token: {response.Token}");
+
+                    PlayerManager.Player player = new PlayerManager.Player {
+
+                        UserID = response.UserID,
+                        UserIGN = response.IGN,
+                        Carats = response.Carats,
+                        EXP = response.Exp,
+                        Token = response.Token,
+                        ForumName = response.ForumName,
+                        Region = response.Region,
+                        Country = response.Country,
+                        GUID = response.GUID,
+                        CurrentAvatar = LoginQuery.CurrentAvatar,
+                        
+                    };
+
+                    PlayerManager.Players.Add(stream, player);
+
+                    clientUsernames.Add(stream, response.IGN);
+                    clientUserID.Add(stream, response.UserID);
+
+                    _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+                }
             }
 
            

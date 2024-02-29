@@ -16,10 +16,25 @@ namespace Gemnet.Packets.Enums
             INVENTORY = 0x31,
             GAMEGUARD = 0x48,
             QUERY = 0x40,
-            UNKNOWN = 0x33,
+            GUILD = 0x33,
             UNKNOWN_2 = 0x0A,
             UNKNOWN_3 = 0x41,
             UNKNOWN_4 = 0x1f,
+        }
+
+        public enum Guild
+        {
+            UNKNOWN_A = 0x80,
+            GET_GUILD_MARK = 0x82,
+            UNKNOWN_B = 0x92,
+            UNKNOWN_C = 0x96,
+            IS_USER_GUILD_MEMEBER = 0x94,
+            GET_GUILD_RANK = 0x90,
+            GET_GUILD_MEMBER = 0x84,
+            GET_GUILD_GREETINGS = 0x8A,
+            GET_GUILD_RANK_LIST = 0x8E,
+            
+
         }
 
         public enum Unknown3 
