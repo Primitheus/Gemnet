@@ -72,7 +72,7 @@ namespace Gemnet.PacketProcessors
                 
                 Console.WriteLine($"Token: {response.Token}");
 
-                Server.Player player = new Server.Player {
+                PlayerManager.Player player = new PlayerManager.Player {
 
                     UserID = response.UserID,
                     UserIGN = response.IGN,
@@ -82,9 +82,12 @@ namespace Gemnet.PacketProcessors
                     ForumName = response.ForumName,
                     Region = response.Region,
                     Country = response.Country,
-                    GUID = response.GUID
+                    GUID = response.GUID,
+                    CurrentAvatar = LoginQuery.CurrentAvatar,
                     
                 };
+                
+                PlayerManager.Players.Add(stream, player);
 
                 clientUsernames.Add(stream, response.IGN);
                 clientUserID.Add(stream, response.UserID);

@@ -292,6 +292,9 @@ namespace SendPacket
                 case ActionQuery.CHAT:
                     Query.Chat(type, action, packetBody, stream);
                     break;
+                case ActionQuery.CHANGE_AVATAR:
+                    Query.ChangeAvatar(type, action, packetBody, stream);
+                    break;
                 //case ActionQuery.EQUIPPING: // ACTION.EQUIPPING
                                             // Process EQUIPPING action
                     //Query.Unknown8(type, action);

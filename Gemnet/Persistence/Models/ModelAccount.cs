@@ -43,6 +43,5 @@ public class ModelAccount : IModel
     public static readonly string QueryGetIdFromUsername = "SELECT UUID FROM accounts WHERE IGN = @username";
     public static readonly string QueryUpdateAvatar = "UPDATE accounts SET CurrentAvatar = @avatar WHERE UUID = @ID";
 
-
     public static readonly int TableCreationOrder = 999;
 }

@@ -173,6 +173,7 @@ namespace Gemnet.Packets.Enums
         public enum ActionQuery
         {
             // QUERY (0x40)
+            CHANGE_AVATAR = 0xa2,
             CHANGE_AI_INFO = 0xb6,
             CHANGE_HOST = 0x42,
             EQUIPPED_AVATAR = 0xa0,

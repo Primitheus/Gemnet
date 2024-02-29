@@ -83,13 +83,38 @@ namespace Gemnet.PacketProcessors
 
         }
 
+        public static void ChangeAvatar(ushort type, ushort action, byte[] body, NetworkStream stream) {
+            action++;
+
+            ChangeAvatarReq request = ChangeAvatarReq.Deserialize(body);   
+            ChangeAvatarRes response = new ChangeAvatarRes(); 
+            response.Type = type;
+            response.Action = action;
+
+            PlayerManager playerM = new PlayerManager();
+            var IGN = playerM.GetPlayerIGN(stream);
+            Console.WriteLine($"Player {IGN} Change Avatar to: {request.AvatarID}");
+
+            var Query = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryUpdateAvatar, new 
+            {
+                avatar = request.AvatarID,
+                ID = playerM.GetPlayerUserID(stream)
+            });
+
+            playerM.UpdatePlayerCurrentAvatar(stream, request.AvatarID);
+            Console.WriteLine($"Changed Avatar: {playerM.GetPlayerCurrentAvatar(stream)}");
+
+            
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+        }
+
         public static void ClearAvatarSlot(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
             
             ClearAvatarSlotReq request = ClearAvatarSlotReq.Deserialize(body);
-            ClearAvatarSlotRes response = new ClearAvatarSlotRes();
 
+            ClearAvatarSlotRes response = new ClearAvatarSlotRes();
             response.Type = type;
             response.Action = action; 
 

@@ -8,21 +8,6 @@ using System.Collections.Concurrent;
 using static Gemnet.Packets.Enums.Packets;
 public class Server
 {
-
-    public class Player {
-        public string UserIGN { get; set; }
-        public int UserID { get; set; }
-        public int CurrentAvatar { get; set; }
-        public int Carats { get; set; }
-        public int EXP { get; set; }
-        public string GUID {get; set;}
-        public string Token {get; set;}
-        public string ForumName {get; set;}
-        public string Country { get; set; }
-        public string Region { get; set; }
-    }
-
-    public static Dictionary<NetworkStream, Player> Players = new Dictionary<NetworkStream, Player>();
     public static Dictionary<NetworkStream, string> clientUsernames = new Dictionary<NetworkStream, string>();
     public static Dictionary<NetworkStream, int> clientUserID = new Dictionary<NetworkStream, int>();
 

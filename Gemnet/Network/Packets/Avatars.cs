@@ -271,6 +271,59 @@ namespace Gemnet.Network.Packets
         }
     }
 
+    public class ChangeAvatarReq : HeaderPacket
+    {
+        public int AvatarID { get; set; }
+
+        private struct PropertyOffsets
+        {
+            public static readonly int AvatarID = 6;
+        
+
+        }
+        public new static ChangeAvatarReq Deserialize(byte[] data)
+        {
+            ChangeAvatarReq packet = new ChangeAvatarReq();
+
+            int offset = 6;
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.AvatarID = BitConverter.ToInt32(data, PropertyOffsets.AvatarID);
+
+
+            return packet;
+        }
+
+
+    }
+
+    public class ChangeAvatarRes : HeaderPacket
+    {   
+        public int Result { get; set; }
+
+        private struct PropertyOffsets
+        {   
+
+        }
+        public override byte[] Serialize()
+        {
+            Size = 6;
+
+            byte[] buffer = new byte[Size];
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+            offset += 6;
+
+            //BitConverter.GetBytes(AvatarID).CopyTo(buffer, PropertyOffsets.AvatarID)        
+
+            return buffer;
+        }
+    }
+
 
 
 
