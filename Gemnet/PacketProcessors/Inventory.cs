@@ -136,5 +136,22 @@ namespace Gemnet.PacketProcessors
 
         }
 
+
+        public static void Enchant(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+            EnchantReq request = EnchantReq.Deserialize(body);
+            EnchantRes response = new EnchantRes();
+
+            response.Action = action;
+            response.Type = type;
+            
+            response.EnchantGemID = request.EnchantGemID;
+            response.StatMod = 1;
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+
+        }
+
     }
 }

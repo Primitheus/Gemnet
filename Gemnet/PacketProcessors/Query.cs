@@ -250,41 +250,20 @@ namespace Gemnet.PacketProcessors
         public static void LeaveRoom(ushort type, ushort action, byte[] body, NetworkStream stream) {
             action++;
             
-            //Some reason this is broken, So i'll just send a static response for now.
-
-            /*
-            
-            LeaveRoomReq request = LeaveRoomReq.Deserialize(body);
-
-            LeaveRoomRes response = new LeaveRoomRes();
-            
-            response.Type = 576;
-            response.Action = action;
-            response.Result = 9;
-
-            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
-
-            */
-
             Console.WriteLine($"Leaving Room");
-
-            /*
-
             LeaveRoomReq request = LeaveRoomReq.Deserialize(body);
-
             LeaveRoomRes response = new LeaveRoomRes();
             
             response.Type = 576;
             response.Action = action;
-            response.Result = 9;
+            response.ID = request.ID;
 
-            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize());
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
-            */
 
-            byte[] data = { 0x02, 0x40, 0x00, 0x0c, 0x83, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x00 };
+            //byte[] data = { 0x02, 0x40, 0x00, 0x0c, 0x83, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x00 };
 
-            _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+            //_ = ServerHolder.ServerInstance.SendPacket(data, stream);
 
         }
 

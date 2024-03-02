@@ -34,28 +34,33 @@ namespace Gemnet.PacketProcessors
                 OID = request.UserID,
             });
 
-
-            int[] itemIDs = new int[itemInfo.Count()];
-            int[] serverIDs = new int[itemInfo.Count()];
-            int[] itemEndings = new int[itemInfo.Count()];
-            int i = 0;
-
-            foreach (var items in itemInfo)
-            {
-                itemIDs[i] = items.ItemID;
-                serverIDs[i] = items.ServerID;
-                itemEndings[i] = 1000;
-                Console.WriteLine($"IDs {itemIDs[i]}, {serverIDs[i]}");
-                i++;
-            }
-
-
             response.Type = type;
             response.Action = action;
 
-            response.ServerID = serverIDs;
-            response.ItemID = itemIDs;
-            response.ItemEnd = itemEndings;
+            List<Item> Items = new List<Item>();
+
+
+            foreach (var item in itemInfo)
+            {
+
+                Console.WriteLine($"ServerID={item.ServerID}, ItemID={item.ItemID}");
+                Items.Add(new Item
+                {
+                    ServerID = item.ServerID,
+                    ItemID = item.ItemID,
+                    ItemEnd = 1000,
+                    StatMod = 7,
+                    ItemType = 0
+                });
+                
+                
+
+            }
+
+            response.Items = Items;
+
+
+
 
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), 1440, stream);
             //_ = ServerHolder.ServerInstance.SendPacket(test);

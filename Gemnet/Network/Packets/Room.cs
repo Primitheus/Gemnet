@@ -16,19 +16,25 @@ namespace Gemnet.Network.Packets
 {
     public class LeaveRoomReq : HeaderPacket
     {
-        public int Result {get; set;}
+        public int ID {get; set;}
+
+        private struct PropertyOffsets {
+
+            public static readonly int ID = 10;
+
+
+
+        }
+
         public new static LeaveRoomReq Deserialize(byte[] data)
         {
             LeaveRoomReq packet = new LeaveRoomReq();
-
-            int offset = 6;
 
             packet.Type = ToUInt16BigEndian(data, 0);
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            offset += 4;
-            packet.Result = BitConverter.ToInt32(data, offset);
+            packet.ID = Convert.ToInt32(data[PropertyOffsets.ID]);
 
             return packet;
         }
@@ -36,24 +42,24 @@ namespace Gemnet.Network.Packets
 
     public class LeaveRoomRes : HeaderPacket
     {
-        public int Result {get; set;}
+        public int ID {get; set;}
+
+        private struct PropertyOffsets {
+                
+            public static readonly int ID = 10;
+
+        }
 
         public override byte[] Serialize()
         {
 
             byte[] buffer = new byte[12];
-
             Size = (ushort)(buffer.Length);
 
-            byte[] result = BitConverter.GetBytes(Result);
-
             int offset = 0;
-
             base.Serialize().CopyTo(buffer, offset);
-            offset += 6;
 
-            offset += 4;
-            result.CopyTo(buffer, offset);
+            BitConverter.GetBytes(ID).CopyTo(buffer, PropertyOffsets.ID);
 
             return buffer;
         }

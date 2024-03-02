@@ -29,57 +29,61 @@ namespace Gemnet.Network.Packets
         }
     }
 
+    public class Item {
+
+        public int ServerID { get; set; }
+        public int ItemID { get; set; }
+        public int ItemEnd { get; set; }
+        public int StatMod {get; set;}
+        public int ItemType { get; set; }
+
+    }
+
     public class GetPropertyRes : HeaderPacket
     {
-        public int[] ServerID { get; set; }
-        public int[] ItemID { get; set; }
-        public int[] ItemEnd { get; set; }
-        public int[] ItemType { get; set; }
+        public List<Item> Items { get; set; }
+
+        private struct PropertyOffsets {
+
+            public static readonly int NumberOfItems = 6;
+            public static readonly int ServerID = 8;
+            public static readonly int ItemID = 12;
+            public static readonly int ItemEnd = 37;
+            public static readonly int StatMod = 41;
+            public static readonly int ItemType = 39;
+
+        }
 
 
         public override byte[] Serialize()
         {
-            int pairSize = sizeof(int) * 2; // Size of a pair of ServerID and ItemID
-            int paddingSize = 18; // Size of padding between pairs
+            int NumberOfItems = Items.Count();
+            int bufferSize = 6 + (NumberOfItems * 49) + 12;
 
-            int totalPairs = ServerID.Length; // Assuming ServerID and ItemID arrays have the same length
+            byte[] buffer = new byte[bufferSize];
 
-            Size = (ushort)((totalPairs * 49) + 8);
-
-            byte[] buffer = new byte[Size];
+            Size = (ushort)buffer.Length;
             int offset = 0;
 
             base.Serialize().CopyTo(buffer, offset);
-            offset += 6;
+            var i = 0;
 
-            byte[] numberofitems = BitConverter.GetBytes(totalPairs);
-
-            numberofitems.CopyTo(buffer, offset);
-
-            offset += 2;
-
-            for (int i = 0; i < totalPairs; i++)
+            foreach (var item in Items) 
             {
-                byte[] serverID = BitConverter.GetBytes(ServerID[i]);
-                byte[] itemID = BitConverter.GetBytes(ItemID[i]);
-                byte[] itemend = BitConverter.GetBytes(ItemEnd[i]);
-
-
-                serverID.CopyTo(buffer, offset);
-                offset += 4;
-                itemID.CopyTo(buffer, offset);
-                offset += 25;
-                itemend.CopyTo(buffer, offset);
-                offset += 2;
-
-                if (i < totalPairs)
-                {
-                    byte[] padding = new byte[paddingSize];
-                    padding.CopyTo(buffer, offset);
-                    offset += paddingSize;
+                if (i == 0) {
+                    
+                    BitConverter.GetBytes(NumberOfItems).CopyTo(buffer, PropertyOffsets.NumberOfItems);
+                
                 }
-            }
+               
+                BitConverter.GetBytes(item.ServerID).CopyTo(buffer, i + PropertyOffsets.ServerID);    
+                BitConverter.GetBytes(item.ItemID).CopyTo(buffer, i + PropertyOffsets.ItemID);
+                BitConverter.GetBytes(item.ItemEnd).CopyTo(buffer, i + PropertyOffsets.ItemEnd);
+                BitConverter.GetBytes(item.StatMod).CopyTo(buffer, i + PropertyOffsets.StatMod);                
 
+                i = i + 49;
+
+            }
             return buffer;
         }
 

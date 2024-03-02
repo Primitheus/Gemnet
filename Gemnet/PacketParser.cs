@@ -193,6 +193,9 @@ namespace SendPacket
                 case ActionInventory.OPEN_BOX: // ACTION.BUY_ITEM
                     Inventory.OpenBox(type, action, packetBody, stream);
                     break;
+                case ActionInventory.ENCHANT: // ACTION.ENCHANT
+                    Inventory.Enchant(type, action, packetBody, stream);
+                    break;
                 case ActionInventory.UNKNOWN_10: // ACTION.UNKNOWN_10
                     //General.Unknown(type, action, stream);
                     break;
