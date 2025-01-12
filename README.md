@@ -1,11 +1,9 @@
 # Gemnet
 Rumble Fighter/Gem Fighter Server Emulator.
 
-This emulator is backwards compatible with all if not most versions of Rumble Fighter with very limited functionality.
-Testing is done on the latest build and very limited testing on a old 2007 build.
 No testing or plans is currently being made for anything specific to Gem Fighter, however porting it to Gem Fighter shouldn't be a difficult task.
 
-WARNING: This project essentially comes with no support, it wont work out of the box because you need a modified game client which I do not provide. However that doesn't stop you from contributing by refactoring code or fixing my spaghetti server code.
+WARNING: This project essentially comes with no support, you cannot connect to the Server out of the box because you need a modified game client which I cannot provide. However, that doesn't stop you from contributing by refactoring code or fixing my spaghetti server code.
 
 - Features
     * Persistent Inventory
