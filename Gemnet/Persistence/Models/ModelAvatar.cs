@@ -112,7 +112,7 @@ public static readonly string QueryCreateTable = @"CREATE TABLE IF NOT EXISTS `a
         // Validate and sanitize slotName here to prevent SQL injection
         return $"UPDATE rumblefighter.avatar SET `{slotName}` = @ServerID WHERE `AvatarID` = @AID";
     }
-    public static readonly int TableCreationOrder = 999;
+    public static readonly int TableCreationOrder = 997;
 
     public object AvatarProperties { get; internal set; }
 }

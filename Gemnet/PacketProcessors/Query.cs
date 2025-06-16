@@ -50,43 +50,51 @@ namespace Gemnet.PacketProcessors
 
         public static void GetEquippedAvatar(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
-            action++;
-            EquippedAvatarRes response = new EquippedAvatarRes();
-            PlayerManager playerM = new PlayerManager();
-
-            response.Type = type;
-            response.Action = action;
-
-            Console.WriteLine($"Get Equipped Avatar");
-
-            var UserID = playerM.GetPlayerUserID;
-            var AvatarID = playerM.GetPlayerCurrentAvatar(stream);
-
-            if (AvatarID == 0)
+            try
             {
-                Console.WriteLine("No Avatar Equipped, Equipping Default Avatar");
-                var AvatarQuery = ServerHolder.DatabaseInstance.Select<ModelAvatar>(ModelAvatar.QueryGetAvatarIDs, new
-                {
-                    ID = UserID,
-                });
+                action++;
+                EquippedAvatarRes response = new EquippedAvatarRes();
+                PlayerManager playerM = new PlayerManager();
 
-                if (AvatarQuery != null && AvatarQuery.Any())
-                {
-                    AvatarID = AvatarQuery.First().AvatarID;
-                    playerM.UpdatePlayerCurrentAvatar(stream, AvatarID);
-                }
-                else
-                {
-                    Console.WriteLine("No Avatar Found");
-                    return;
-                }
+                response.Type = type;
+                response.Action = action;
 
-            } 
-            
-            response.AvatarID = AvatarID;
-            
-            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+                Console.WriteLine($"Get Equipped Avatar");
 
+                var UserID = playerM.GetPlayerUserID(stream);
+                var AvatarID = playerM.GetPlayerCurrentAvatar(stream);
+
+                if (AvatarID == 0)
+                {
+                    Console.WriteLine("No Avatar Equipped, Equipping Default Avatar");
+                    var AvatarQuery = ServerHolder.DatabaseInstance.Select<ModelAvatar>(ModelAvatar.QueryGetAvatarIDs, new
+                    {
+                        ID = UserID,
+                    });
+
+                    if (AvatarQuery != null && AvatarQuery.Any())
+                    {
+                        AvatarID = AvatarQuery.First().AvatarID;
+                        playerM.UpdatePlayerCurrentAvatar(stream, AvatarID);
+                    }
+                    else
+                    {
+                        Console.WriteLine("No Avatar Found");
+                        return;
+                    }
+                } 
+
+                response.AvatarID = AvatarID;
+                string hexOutput = string.Join(", ", response.Serialize().Select(b => $"0x{b:X2}"));
+
+                Console.WriteLine(hexOutput);
+
+                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in GetEquippedAvatar: {ex.Message}");
+            }
         }
 
         public static void ChangeAvatar(ushort type, ushort action, byte[] body, NetworkStream stream) {

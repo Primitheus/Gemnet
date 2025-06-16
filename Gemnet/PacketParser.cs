@@ -80,6 +80,10 @@ namespace SendPacket
                     // Process TO_LOBBY
                     Login.TO_LOBBY(type, action, packetBody, stream);
                     break;
+                case ActionLogin.SET_OPTION_INV:
+                    // Process SET_OPTION_INV
+                    Login.SetOptionInventory(type, action, packetBody, stream);
+                    break;
                 default:
                     Console.WriteLine($"Unknown action for Login packet: {action}");
                     break;
