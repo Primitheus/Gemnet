@@ -91,7 +91,7 @@ namespace Gemnet.Packets.Enums
             UNKNOWN_N = 0x96,
             UNKNOWN_O = 0x98,
             ENCHANT = 0xbe,
-            UNKNOWN_Q = 0xaa,
+            ADD_BUDDY = 0xaa,
             UNKNOWN_R = 0xb8,
             UNKNOWN_S = 0x8b,
             UNKNOWN_T = 0xb4,

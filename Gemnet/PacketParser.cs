@@ -74,7 +74,7 @@ namespace SendPacket
                     break;
                 case ActionLogin.BUDDY_LIST:
                     // Process BUDDY_LIST
-                    Login.GetBuddyList(type, action, stream);
+                    Login.GetBuddyList(type, action, packetBody, stream);
                     break;
                 case ActionLogin.TO_LOBBY:
                     // Process TO_LOBBY
@@ -83,6 +83,10 @@ namespace SendPacket
                 case ActionLogin.SET_OPTION_INV:
                     // Process SET_OPTION_INV
                     Login.SetOptionInventory(type, action, packetBody, stream);
+                    break;
+                case ActionLogin.ADD_BUDDY:
+                    // Process ADD_BUDDY
+                    Login.ADD_BUDDY(type, action, packetBody, stream);
                     break;
                 default:
                     Console.WriteLine($"Unknown action for Login packet: {action}");
@@ -162,7 +166,7 @@ namespace SendPacket
                     break;
                 case ActionGeneral.CHAT:
                     General.GlobalChat(type, action, packetBody, stream);
-                    break;
+                    break;       
                 default:
                     Console.WriteLine($"Unknown action for General packet: {action}");
                     break;

@@ -15,6 +15,7 @@ WARNING: This project essentially comes with no support, you cannot connect to t
 
 - In Progress
     * Lobby
+    * Buddy List
     * Create/Join Rooms
     * Avatar List
     * Item equipping + persistence.
@@ -24,7 +25,6 @@ WARNING: This project essentially comes with no support, you cannot connect to t
    
 - TODO
     * Gift List
-    * Buddy List
     * Megaphone
     * Timed Items
     * Character Creation
