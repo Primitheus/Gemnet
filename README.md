@@ -46,7 +46,8 @@ WARNING: This project essentially comes with no support, you cannot connect to t
     * Player Information isn't accurately displaying in rooms.
     * Unknown Room Master identifier, player positioning inside rooms.
     * Medals not showing. (Unknown field somewhere)
- 
+    * Limited Uses/Timed Items are not implemented. 
+
 - Road Blocks
    * NSZ/Build Limitations.
 

@@ -11,6 +11,7 @@ namespace Gemnet.Network.Packets
     public class BuyItemReq : HeaderPacket
     {
         public int ItemID { get; set; }
+        public int ItemEnd { get; set; }
 
         public new static BuyItemReq Deserialize(byte[] data)
         {
@@ -22,7 +23,8 @@ namespace Gemnet.Network.Packets
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            packet.ItemID = BitConverter.ToInt32(data, offset+1);
+            packet.ItemID = BitConverter.ToInt32(data, offset + 1);
+            packet.ItemEnd = BitConverter.ToInt32(data, offset + 5);
 
 
             return packet;

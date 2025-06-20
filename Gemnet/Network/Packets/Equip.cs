@@ -25,8 +25,8 @@ namespace Gemnet.Network.Packets
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            packet.ItemID = BitConverter.ToInt16(data, offset);
-            packet.ItemEnd = BitConverter.ToInt16(data, offset + 4);
+            packet.ItemID = BitConverter.ToInt32(data, offset);
+            packet.ItemEnd = BitConverter.ToInt32(data, offset + 4);
 
             return packet;
         }

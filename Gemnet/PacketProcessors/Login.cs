@@ -141,7 +141,7 @@ namespace Gemnet.PacketProcessors
 
         static string GenerateRandomString(int length)
         {
-            const string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"; // Add any other characters you want to include
+            const string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
             Random random = new Random();
             StringBuilder stringBuilder = new StringBuilder(length);
 
@@ -166,13 +166,9 @@ namespace Gemnet.PacketProcessors
             DateTime pstNow = TimeZoneInfo.ConvertTimeFromUtc(utcNow, pstZone);
 
 
-            // DateTime now = DateTime.Now; // Get the current time
-            // long ticks = now.Ticks; // Convert the current time to a 64-bit integer
-            // byte[] timeArray = BitConverter.GetBytes(ticks); // Convert the 64-bit integer to a byte array
-
             // Get the current time in milliseconds since Unix epoch
-            long nodejsTimestamp = ((DateTimeOffset)pstNow).ToUnixTimeMilliseconds();
-            long windows64Timestamp = (nodejsTimestamp + 11644473600000) * 10000;
+            long unixTime = ((DateTimeOffset)pstNow).ToUnixTimeMilliseconds();
+            long windows64Timestamp = (unixTime + 11644473600000) * 10000;
             byte[] timeArray = BitConverter.GetBytes(windows64Timestamp);
 
             ServerTime serverTime = new ServerTime();

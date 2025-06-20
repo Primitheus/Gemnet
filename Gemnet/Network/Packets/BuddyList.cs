@@ -195,4 +195,57 @@ namespace Gemnet.Network.Packets
             }
         }
     }
+
+
+    public class RemoveBuddyReq : HeaderPacket
+    {
+        public int UserID { get; set; }
+
+        public new static RemoveBuddyReq Deserialize(byte[] data)
+        {
+            RemoveBuddyReq packet = new RemoveBuddyReq();
+
+            int offset = 6;
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.UserID = BitConverter.ToInt32(data, offset);
+
+            return packet;
+        }
+
+    }
+
+    public class RemoveBuddyRes : HeaderPacket
+    {
+        public int UserID { get; set; }
+
+        public override byte[] Serialize()
+        {
+            // Use a MemoryStream for dynamic sizing
+            using (var ms = new MemoryStream())
+            using (var writer = new BinaryWriter(ms))
+            {
+                // Reserve space for header (will patch Size later)
+                byte[] header = base.Serialize();
+                writer.Write(header);
+
+                // Write UserID (Little Endian)
+                byte[] useridBytes = BitConverter.GetBytes(UserID);
+                writer.Write(useridBytes);
+
+                // Patch the Size field in the header if needed
+                byte[] result = ms.ToArray();
+                ushort size = (ushort)result.Length;
+                byte[] sizeBytes = BitConverter.IsLittleEndian ? new byte[] { (byte)(size >> 8), (byte)(size & 0xFF) } : BitConverter.GetBytes(size);
+                result[2] = sizeBytes[0];
+                result[3] = sizeBytes[1];
+
+                return result;
+            }
+        }
+    }
+
 }

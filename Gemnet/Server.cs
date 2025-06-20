@@ -147,7 +147,7 @@ public class Server
         }
 
         await stream.WriteAsync(packet, 0, packet.Length);
-
+        Console.WriteLine("PACKET TEST!");
         Console.WriteLine($"Sent Packet: Type={TypeName}, Action={action:X2}, Length={length}");
     }
 

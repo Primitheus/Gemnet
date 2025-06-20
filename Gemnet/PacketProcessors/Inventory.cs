@@ -56,7 +56,8 @@ namespace Gemnet.PacketProcessors
 
             BuyItemReq request = BuyItemReq.Deserialize(body);
 
-            Console.WriteLine($"Buying ItemID={request.ItemID}");
+            Console.WriteLine($"Buying ItemID={request.ItemID}, ItemEnd={request.ItemEnd}");
+
 
             BuyItemRes response = new BuyItemRes();
 
@@ -77,7 +78,8 @@ namespace Gemnet.PacketProcessors
                     ServerHolder.DatabaseInstance.Execute(ModelInventory.InsertItem, new
                     {
                         OID = 1,
-                        ID = request.ItemID
+                        ID = request.ItemID,
+                        END = request.ItemEnd
                     });
 
                     var ServerID = ServerHolder.DatabaseInstance.SelectFirst<ModelInventory>(ModelInventory.GetServerID, new
@@ -87,7 +89,7 @@ namespace Gemnet.PacketProcessors
                     });
 
                     response.ServerID = ServerID.ServerID;
-                    response.Carats = 5000000;
+                    response.Carats = 5000000; // Remaining Currency after purchase, automatically goes to carat or rc. this is just visual rn.
 
                     _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
