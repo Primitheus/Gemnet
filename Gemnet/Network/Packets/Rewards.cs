@@ -11,7 +11,7 @@ namespace Gemnet.Network.Packets
 
   public class RewardsReq : HeaderPacket
     {
-        public int unknown1 {get; set;}
+        public int MatchId {get; set;} // Guess.
         public int unknown2 {get; set;}
         public int unknown3 {get; set;}
         public int unknown4 {get; set;}
@@ -44,7 +44,7 @@ namespace Gemnet.Network.Packets
             packet.Action = BitConverter.ToUInt16(data, 4);
 
             offset += 4;
-            packet.unknown1 = BitConverter.ToInt16(data, offset);
+            packet.MatchId = BitConverter.ToInt16(data, offset);
             offset += 1;
             packet.unknown2 = BitConverter.ToInt16(data, offset);
             offset += 1;

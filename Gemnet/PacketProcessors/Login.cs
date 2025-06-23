@@ -282,7 +282,7 @@ namespace Gemnet.PacketProcessors
 
             Console.WriteLine($"Set Option Inventory");
 
-            byte[] data = { 0x00, 0x10, 0x00, 0x08, 0xD2, 0x00, 0x01, 0x00 };
+            byte[] data = { 0x00, 0x10, 0x00, 0x08, 0xD3, 0x00, 0x01, 0x00 };
 
             _ = ServerHolder.ServerInstance.SendPacket(data, stream);
 
