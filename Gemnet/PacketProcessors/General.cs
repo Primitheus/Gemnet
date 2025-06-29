@@ -13,6 +13,10 @@ namespace Gemnet.PacketProcessors
     internal class General
     {
         public int index = 0;
+
+        private static PlayerManager _playerManager = ServerHolder._playerManager;
+        private static GameManager _gameManager = ServerHolder._gameManager;
+
         public static void GetProperty(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
 
@@ -366,8 +370,9 @@ namespace Gemnet.PacketProcessors
 
             MatchReq request = MatchReq.Deserialize(body);
             MatchRes response = new MatchRes();
-            PlayerManager playerM = new PlayerManager();
-            var UserID = playerM.GetPlayerUserID(stream);
+
+            var player = _playerManager.GetPlayerByStream(stream);
+
 
             response.Type = type;
             response.Action = action;
@@ -378,7 +383,7 @@ namespace Gemnet.PacketProcessors
 
             var AvatarItemQuery = ServerHolder.DatabaseInstance.Select<ModelAvatar>(ModelAvatar.QueryGetAvatarData, new
             {
-                AID = playerM.GetPlayerCurrentAvatar(stream),
+                AID = player.CurrentAvatar,
             });
 
             int[] ServerID = null;
@@ -422,7 +427,7 @@ namespace Gemnet.PacketProcessors
             }
 
 
-            response.UserID = UserID;
+            response.UserID = player.UserID;
             response.UserIGN = request.UserIGN;
             response.ItemID = ServerID;
             response.Country ="US";

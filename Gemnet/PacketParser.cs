@@ -207,6 +207,9 @@ namespace SendPacket
                 case ActionInventory.UNKNOWN_10: // ACTION.UNKNOWN_10
                     //General.Unknown(type, action, stream);
                     break;
+                case ActionInventory.WIN_MEDAL:
+                    Inventory.WinMedal(type, action, packetBody, stream);
+                    break;
                 default:
                     Console.WriteLine($"Unknown action for Inventory packet: {action}");
                     break;
@@ -261,7 +264,7 @@ namespace SendPacket
                     break;
                 case ActionQuery.CREATE_ROOM: // ACTION.CREATE_ROOM
                            // Process CREATE_ROOM action
-                    Query.CreateRoom(type, action, packetBody, stream);
+                    Query.HandleCreateRoom(type, action, packetBody, stream);
                     break;
                 case ActionQuery.JOIN_ROOM: // ACTION.JOIN_ROOM_1
                            // Process JOIN_ROOM_1 action
@@ -298,7 +301,7 @@ namespace SendPacket
                     Query.GetReward(type, action, packetBody, stream);
                     break;
                 case ActionQuery.MATCH_REWARD:
-                    Query.GetReward(type, action, packetBody, stream);
+                    Query.GetMatchReward(type, action, packetBody, stream);
                     break;
                 case ActionQuery.CHAT:
                     Query.Chat(type, action, packetBody, stream);
@@ -306,10 +309,13 @@ namespace SendPacket
                 case ActionQuery.CHANGE_AVATAR:
                     Query.ChangeAvatar(type, action, packetBody, stream);
                     break;
+                case ActionQuery.FIN:
+                    Query.FIN(type, action, packetBody, stream);
+                    break;
                 //case ActionQuery.EQUIPPING: // ACTION.EQUIPPING
-                                            // Process EQUIPPING action
-                    //Query.Unknown8(type, action);
-                    //break;
+                // Process EQUIPPING action
+                //Query.Unknown8(type, action);
+                //break;
                 default:
                     Console.WriteLine($"Unknown action for Query packet: {action}");
                     break;

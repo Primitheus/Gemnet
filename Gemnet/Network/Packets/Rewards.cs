@@ -24,8 +24,8 @@ namespace Gemnet.Network.Packets
         public int EXP {get; set;}
         public int unknown11 {get; set;}
         public string UserIGN { get; set; }
-        public int unknown12 {get; set;} // might be previous best?
-        public int Kills {get; set;}
+        public ushort unknown12 {get; set;} // might be previous best?
+        public ushort Kills {get; set;}
         public string NNNNNNNNNN {get; set;} // idk what to say it's just N's
         // exp again
         public int Carat {get; set;}
@@ -71,10 +71,10 @@ namespace Gemnet.Network.Packets
             packet.UserIGN = Encoding.ASCII.GetString(data, offset, 22);
             nullTerminator = packet.UserIGN.IndexOf('\x00');
             packet.UserIGN = packet.UserIGN.Remove(nullTerminator);
-            offset += 23;
-            packet.unknown12 = BitConverter.ToInt16(data, offset); // 0x0a
-            offset += 3;
-            packet.Kills = BitConverter.ToInt32(data, offset);
+            offset += 22;
+            packet.unknown12 = BitConverter.ToUInt16(data, offset); // 0x0a
+            offset += 4;
+            packet.Kills = BitConverter.ToUInt16(data, offset);
             offset += 4;
             packet.NNNNNNNNNN = Encoding.ASCII.GetString(data, offset, 10);
             offset += 17;

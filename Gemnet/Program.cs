@@ -21,7 +21,8 @@ using Gemnet.Persistence.Models;
         {
             public static Server ServerInstance { get; set; }
             public static Database DatabaseInstance { get; set; }
-
+            public static PlayerManager _playerManager { get; set; }
+            public static GameManager _gameManager { get; set; }
         }
 
 
@@ -56,6 +57,11 @@ using Gemnet.Persistence.Models;
 
             ServerHolder.ServerInstance = server;
             ServerHolder.DatabaseInstance = database;
+
+            Console.WriteLine("Initializing managers...");
+            ServerHolder._playerManager = new PlayerManager(ServerHolder.DatabaseInstance);
+            ServerHolder._gameManager = new GameManager(ServerHolder._playerManager);
+
 
             await server.Start();
 

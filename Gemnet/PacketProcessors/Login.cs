@@ -22,6 +22,9 @@ namespace Gemnet.PacketProcessors
 
     internal class Login
     {
+
+        private static PlayerManager _playerManager = ServerHolder._playerManager;
+
         public static void VersionCheck(ushort type, ushort action, NetworkStream stream)
         {
 
@@ -95,12 +98,10 @@ namespace Gemnet.PacketProcessors
                 {
 
                     LoginRes response = new LoginRes();
-                    Random random = new Random();
-                    int randomResult = random.Next(1, 101);
                     response.Type = type;
                     response.Action = action;
                     response.UserID = LoginQuery.UUID;
-                    response.IGN = LoginQuery.IGN + (randomResult.ToString());
+                    response.IGN = LoginQuery.IGN;
                     response.Exp = LoginQuery.EXP;
                     response.Carats = LoginQuery.Carats;
                     response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
@@ -127,7 +128,7 @@ namespace Gemnet.PacketProcessors
 
                     };
 
-                    PlayerManager.Players.Add(stream, player);
+                    _playerManager.TryAddPlayer(stream, player);
 
                     clientUsernames.Add(stream, response.IGN);
                     clientUserID.Add(stream, response.UserID);
