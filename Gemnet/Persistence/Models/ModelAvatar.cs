@@ -51,58 +51,60 @@ public class ModelAvatar : IModel
     public int Glasses_BP { get; set; }
     public int Mask_BP { get; set; }
     public int Waist_BP { get; set; }
-public static readonly string QueryCreateTable = @"CREATE TABLE IF NOT EXISTS `avatar` (
-                                                      `AvatarID` int NOT NULL,
-                                                      `OwnerID` int NOT NULL,
-                                                      `Job` int,
-                                                      `Hair` int,
-                                                      `Forehead` int,
-                                                      `Top` int,
-                                                      `Bottom` int,
-                                                      `Gloves` int,
-                                                      `Shoes` int,
-                                                      `Eyes` int,
-                                                      `Nose` int,
-                                                      `Mouth` int,
-                                                      `Scroll` int,
-                                                      `ExoA` int,
-                                                      `ExoB` int,
-                                                      `Null` int,
-                                                      `Back` int,
-                                                      `Neck` int,
-                                                      `Ears` int,
-                                                      `Glasses` int,
-                                                      `Mask` int,
-                                                      `Waist` int,
-                                                      `Scroll_BU` int,
-                                                      `Unknown_1` int,
-                                                      `Unknown_2` int,
-                                                      `Inventory_1` int,
-                                                      `Inventory_2` int,
-                                                      `Inventory_3` int,
-                                                      `Unknown_3` int,
-                                                      `Unknown_4` int,
-                                                      `Unknown_5` int,
-                                                      `Unknown_6` int,
-                                                      `Unknown_7` int,
-                                                      `Title` int,
-                                                      `Merit` int,
-                                                      `Avalon` int,
-                                                      `Hair_BP` int,
-                                                      `Top_BP` int,
-                                                      `Bottom_BP` int,
-                                                      `Gloves_BP` int,
-                                                      `Shoes_BP` int,
-                                                      `Back_BP` int,
-                                                      `Neck_BP` int,
-                                                      `Ears_BP` int,
-                                                      `Glasses_BP` int,
-                                                      `Mask_BP` int,
-                                                      `Waist_BP` int,
-                                                      PRIMARY KEY (`AvatarID`),
-                                                      KEY `itemOwner_idx` (`OwnerID`),
-                                                      CONSTRAINT `itemOwner_avatar` FOREIGN KEY (`OwnerID`) REFERENCES `accounts` (`UUID`) ON DELETE CASCADE
-                                                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+
+    public static readonly string QueryCreateTable = @" CREATE TABLE IF NOT EXISTS `avatar` (
+                                    `AvatarID` int NOT NULL AUTO_INCREMENT,
+                                    `OwnerID` int NOT NULL,
+                                    `Job` int NOT NULL DEFAULT 0,
+                                    `Hair` int NOT NULL DEFAULT 0,
+                                    `Forehead` int NOT NULL DEFAULT 0,
+                                    `Top` int NOT NULL DEFAULT 0,
+                                    `Bottom` int NOT NULL DEFAULT 0,
+                                    `Gloves` int NOT NULL DEFAULT 0,
+                                    `Shoes` int NOT NULL DEFAULT 0,
+                                    `Eyes` int NOT NULL DEFAULT 0,
+                                    `Nose` int NOT NULL DEFAULT 0,
+                                    `Mouth` int NOT NULL DEFAULT 0,
+                                    `Scroll` int NOT NULL DEFAULT 0,
+                                    `ExoA` int NOT NULL DEFAULT 0,
+                                    `ExoB` int NOT NULL DEFAULT 0,
+                                    `Null` int NOT NULL DEFAULT 0,
+                                    `Back` int NOT NULL DEFAULT 0,
+                                    `Neck` int NOT NULL DEFAULT 0,
+                                    `Ears` int NOT NULL DEFAULT 0,
+                                    `Glasses` int NOT NULL DEFAULT 0,
+                                    `Mask` int NOT NULL DEFAULT 0,
+                                    `Waist` int NOT NULL DEFAULT 0,
+                                    `Scroll_BU` int NOT NULL DEFAULT 0,
+                                    `Unknown_1` int NOT NULL DEFAULT 0,
+                                    `Unknown_2` int NOT NULL DEFAULT 0,
+                                    `Inventory_1` int NOT NULL DEFAULT 0,
+                                    `Inventory_2` int NOT NULL DEFAULT 0,
+                                    `Inventory_3` int NOT NULL DEFAULT 0,
+                                    `Unknown_3` int NOT NULL DEFAULT 0,
+                                    `Unknown_4` int NOT NULL DEFAULT 0,
+                                    `Unknown_5` int NOT NULL DEFAULT 0,
+                                    `Unknown_6` int NOT NULL DEFAULT 0,
+                                    `Unknown_7` int NOT NULL DEFAULT 0,
+                                    `Title` int NOT NULL DEFAULT 0,
+                                    `Merit` int NOT NULL DEFAULT 0,
+                                    `Avalon` int NOT NULL DEFAULT 0,
+                                    `Hair_BP` int NOT NULL DEFAULT 0,
+                                    `Top_BP` int NOT NULL DEFAULT 0,
+                                    `Bottom_BP` int NOT NULL DEFAULT 0,
+                                    `Gloves_BP` int NOT NULL DEFAULT 0,
+                                    `Shoes_BP` int NOT NULL DEFAULT 0,
+                                    `Back_BP` int NOT NULL DEFAULT 0,
+                                    `Neck_BP` int NOT NULL DEFAULT 0,
+                                    `Ears_BP` int NOT NULL DEFAULT 0,
+                                    `Glasses_BP` int NOT NULL DEFAULT 0,
+                                    `Mask_BP` int NOT NULL DEFAULT 0,
+                                    `Waist_BP` int NOT NULL DEFAULT 0,
+                                    PRIMARY KEY (`AvatarID`),
+                                    KEY `itemOwner_idx` (`OwnerID`),
+                                    CONSTRAINT `itemOwner_avatar` FOREIGN KEY (`OwnerID`) REFERENCES `accounts` (`UUID`) ON DELETE CASCADE
+                                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+
                                                                                                       
     public static readonly string QueryGetAvatarIDs = "SELECT AvatarID FROM rumblefighter.avatar WHERE OwnerID = @ID";
 
@@ -112,6 +114,10 @@ public static readonly string QueryCreateTable = @"CREATE TABLE IF NOT EXISTS `a
         // Validate and sanitize slotName here to prevent SQL injection
         return $"UPDATE rumblefighter.avatar SET `{slotName}` = @ServerID WHERE `AvatarID` = @AID";
     }
+
+    public static readonly string QueryInsertNewAvatar = @"INSERT INTO rumblefighter.avatar (OwnerID, Job, ExoA) VALUES (@OID, @JobServerID, @ExoID);";
+
+
     public static readonly int TableCreationOrder = 997;
 
     public object AvatarProperties { get; internal set; }

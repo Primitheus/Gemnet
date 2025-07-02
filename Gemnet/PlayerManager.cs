@@ -96,4 +96,110 @@ public class PlayerManager
     }
 
 
+    // Get player by IGN from the database.
+    public Player GetPlayerByIGN(string ign)
+    {
+        var playerData = _database.Select<ModelAccount>(ModelAccount.QueryGetPlayerInfo, new { username = ign }).FirstOrDefault();
+
+        if (playerData == null)
+        {
+            return null; // Player not found
+        }
+
+        return new Player
+        {
+            UserID = playerData.UUID,
+            UserIGN = playerData.IGN,
+            EXP = playerData.EXP,
+            CurrentAvatar = playerData.CurrentAvatar,
+
+
+        };
+    }
+
+
+    public List<int> GetItemsOfAvatar(int avatarId)
+    {
+
+        var avatarData = _database.Select<ModelAvatar>(ModelAvatar.QueryGetAvatarData, new { AID = avatarId });
+        int[] serverIds = null;
+
+        foreach (var item in avatarData)
+        {
+            serverIds = new int[]
+            {
+
+
+                item.Job,
+                item.Hair,
+                item.Forehead,
+                item.Top,
+                item.Bottom,
+                item.Gloves,
+                item.Shoes,
+                item.Eyes,
+                item.Nose,
+                item.Mouth,
+                item.Scroll,
+                item.ExoA,
+                item.ExoB,
+                item.Null,
+                item.Back,
+                item.Neck,
+                item.Ears,
+                item.Glasses,
+                item.Mask,
+                item.Waist,
+                item.Scroll_BU,
+                item.Unknown_1,
+                item.Unknown_2,
+                item.Inventory_1,
+                item.Inventory_2,
+                item.Inventory_3,
+                item.Unknown_3,
+                item.Unknown_4,
+                item.Unknown_5,
+                item.Unknown_6,
+                item.Unknown_7,
+                item.Title,
+                item.Merit,
+                item.Avalon,
+                item.Hair_BP,
+                item.Top_BP,
+                item.Bottom_BP,
+                item.Gloves_BP,
+                item.Shoes_BP,
+                item.Back_BP,
+                item.Neck_BP,
+                item.Ears_BP,
+                item.Glasses_BP,
+                item.Mask_BP,
+                item.Waist_BP,
+
+            };
+        }
+
+        List<int> finalItemIds = new List<int>();
+
+        foreach (var serverId in serverIds)
+        {
+            if (serverId == 0)
+            {
+                finalItemIds.Add(0);
+                continue;
+            }
+
+            var itemData = _database.Select<ModelInventory>(ModelInventory.GetItemFromServerID, new { SID = serverId })
+                .FirstOrDefault();
+
+            finalItemIds.Add(itemData?.ItemID ?? 0);
+        }
+
+
+        return finalItemIds;
+    }
+    
+    
+
+
 }

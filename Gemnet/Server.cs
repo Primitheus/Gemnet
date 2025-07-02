@@ -178,20 +178,38 @@ public class Server
     }
 
     public async Task SendPacket(byte[] data, NetworkStream senderStream, bool Exclude)
-{
-    foreach (var client in clients)
     {
-        // Skip the sender client if == true;
+        foreach (var client in clients)
+        {
+            // Skip the sender client if == true;
 
-        var clientStream = client.GetStream();
-        if (clientStream == senderStream && Exclude == true) {
-        } else {
+            var clientStream = client.GetStream();
+            if (clientStream == senderStream && Exclude == true)
+            {
+            }
+            else
+            {
+                await clientStream.WriteAsync(data, 0, data.Length);
+
+            }
+
+            Console.WriteLine($"Sent Packet");
+        }
+    }
+
+
+    // Notify Packet To ALL Connected Clients.
+    public async Task SendNotificationPacket(byte[] data)
+    {
+        foreach (var client in clients)
+        {
+
+            var clientStream = client.GetStream();
             await clientStream.WriteAsync(data, 0, data.Length);
 
+            Console.WriteLine($"Sending Notify Packet");
         }
-
-        Console.WriteLine($"Sent Packet");
-    }
-}
+    } 
+    
 
 }

@@ -39,6 +39,7 @@ namespace SendPacket
                     case (HeaderType.QUERY):
                         ProcessQueryPacket(action, packetBody, stream);
                         break;
+                    
                     default:
                         Console.WriteLine($"Unknown packet type: {type}");
                         break;
@@ -68,6 +69,7 @@ namespace SendPacket
                     break;
                 case ActionLogin.CREATE_ACCOUNT:
                     // Process ACCOUNT_CREATION
+                    Login.CreateAccount((ushort)HeaderType.LOGIN, action, packetBody, stream);
                     break;
                 case ActionLogin.CASH_UNKNOWN:
                     Login.CashUnknown((ushort)HeaderType.LOGIN, action, stream);
@@ -88,6 +90,16 @@ namespace SendPacket
                     // Process ADD_BUDDY
                     Login.ADD_BUDDY(type, action, packetBody, stream);
                     break;
+                case ActionLogin.USE_MEGAPHONE:
+                    Login.UseMegaphone(type, action, packetBody, stream);
+                    break;
+                case ActionLogin.CHANGE_NICKNAME:
+                    Login.ChangeNickname(type, action, packetBody, stream);
+                    break;
+                case ActionLogin.ADD_BUDDY_ID:
+                    Login.AddBuddyID(type, action, packetBody, stream);
+                    break;
+
                 default:
                     Console.WriteLine($"Unknown action for Login packet: {action}");
                     break;
@@ -166,8 +178,12 @@ namespace SendPacket
                     break;
                 case ActionGeneral.CHAT:
                     General.GlobalChat(type, action, packetBody, stream);
-                    break;       
+                    break;
+                case ActionGeneral.GET_USER_INFO_RENEWAL:
+                    General.GetUserInfoRenewal(type, action, packetBody, stream);
+                    break;
                 default:
+            
                     Console.WriteLine($"Unknown action for General packet: {action}");
                     break;
             }
@@ -192,7 +208,7 @@ namespace SendPacket
                     Inventory.GetCash((ushort)(HeaderType.INVENTORY), action, packetBody, stream);
                     break;
                 case ActionInventory.ADD_ITEM: // ACTION.UNKNOWN_6
-                    Inventory.Unknown6((ushort)(HeaderType.INVENTORY), action, packetBody, stream);
+                    Inventory.AddItem((ushort)(HeaderType.INVENTORY), action, packetBody, stream);
                     break;
                 case ActionInventory.BUY_ITEM: // ACTION.BUY_ITEM
                     Inventory.BuyItem(type, action, packetBody, stream);

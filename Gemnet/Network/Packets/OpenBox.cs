@@ -24,7 +24,7 @@ namespace GemnetCS.Network.Packets
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            packet.ServerID = BitConverter.ToInt16(data, offset);
+            packet.ServerID = BitConverter.ToInt32(data, offset);
 
             return packet;
         }
@@ -34,28 +34,30 @@ namespace GemnetCS.Network.Packets
         public int ServerID { get; set; }
         public int ItemID { get; set; }
         public int ItemEnd { get; set; }
+        public int unknown { get; set; } = 3925; // Placeholder for any additional fields
+
+        private struct PropertyOffsets
+        {
+            public const int ServerID = 6;
+            public const int ItemID = 10;
+            public const int ItemEnd = 14;
+            public const int Unknown = 18;
+        }
 
         public override byte[] Serialize()
         {
-            byte[] serverid = BitConverter.GetBytes(ServerID);
-            byte[] itemid = BitConverter.GetBytes(ItemID);
-            byte[] itemend = BitConverter.GetBytes(ItemEnd);
 
-
-            Size = (ushort)(serverid.Length + itemid.Length + itemend.Length + 6 + 2);
+            Size = (ushort)(43);
 
             byte[] buffer = new byte[Size];
             int offset = 0;
 
             base.Serialize().CopyTo(buffer, offset);
-            offset += 8;
 
-            serverid.CopyTo(buffer, offset);
-            offset += 4;
-            itemid.CopyTo(buffer, offset);
-            offset += 4;
-            itemend.CopyTo(buffer, offset);
-
+            BitConverter.GetBytes(ServerID).CopyTo(buffer, PropertyOffsets.ServerID);
+            BitConverter.GetBytes(ItemID).CopyTo(buffer, PropertyOffsets.ItemID);
+            BitConverter.GetBytes(ItemEnd).CopyTo(buffer, PropertyOffsets.ItemEnd);
+            BitConverter.GetBytes(unknown).CopyTo(buffer, PropertyOffsets.Unknown); // Assuming unknown is at offset 18
 
             return buffer;
         }

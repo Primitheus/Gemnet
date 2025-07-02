@@ -8,15 +8,19 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using static Program;
 using static Server;
 using System.Text;
+using BCrypt.Net;
+
+
 
 namespace Gemnet.PacketProcessors
 {
     public enum AccountState
     {
-        Active = 0,
-        Locked = 1,
-        TimedOut = 2,
-        Banned = 3
+        NoAvatar = 0,
+        Active = 1,
+        Locked = 2,
+        TimedOut = 3,
+        Banned = 4
 
     }
 
@@ -24,6 +28,7 @@ namespace Gemnet.PacketProcessors
     {
 
         private static PlayerManager _playerManager = ServerHolder._playerManager;
+        private static GameManager _gameManager = ServerHolder._gameManager;
 
         public static void VersionCheck(ushort type, ushort action, NetworkStream stream)
         {
@@ -41,14 +46,35 @@ namespace Gemnet.PacketProcessors
             Console.WriteLine("[Credential Check]");
             LoginReq request = LoginReq.Deserialize(body);
 
+            //string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
             var LoginQuery = ServerHolder.DatabaseInstance.SelectFirst<ModelAccount>(ModelAccount.QueryLoginAccount, new
             {
                 Email = request.Email,
                 Password = request.Password,
             });
 
-            Console.WriteLine($"[Auth] Type=0x{request.Type:X2}, Length={request.Size}, Action=0x{request.Action:X2}, Username='{request.Email}', Password={request.Password}");
+            static void SendToAccountCreation(NetworkStream stream, int UserId)
+            {
+                NoAvatarRes response = new NoAvatarRes();
+                response.Type = 528;
+                response.Action = 389;
 
+                response.Unknown1 = 4097;
+                response.Message = "no game account";
+
+                PlayerManager.Player player = new PlayerManager.Player
+                {
+
+                    UserID = UserId
+
+                };
+
+                _playerManager.TryAddPlayer(stream, player);
+                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+
+
+            }
 
             static void SendLoginFailResponse(string errorMessage, NetworkStream stream)
             {
@@ -93,6 +119,13 @@ namespace Gemnet.PacketProcessors
                     SendLoginFailResponse("Account is Timed Out.", stream);
                     return;
                 }
+                else if (LoginQuery.State == (int)AccountState.NoAvatar)
+                {
+
+
+                    SendToAccountCreation(stream, LoginQuery.UUID);
+                    return;
+                }
 
                 else
                 {
@@ -104,6 +137,7 @@ namespace Gemnet.PacketProcessors
                     response.IGN = LoginQuery.IGN;
                     response.Exp = LoginQuery.EXP;
                     response.Carats = LoginQuery.Carats;
+                    response.Medals = LoginQuery.Medals;
                     response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
                     response.Token = GenerateRandomString(30);
                     response.Region = "NA";
@@ -130,9 +164,6 @@ namespace Gemnet.PacketProcessors
 
                     _playerManager.TryAddPlayer(stream, player);
 
-                    clientUsernames.Add(stream, response.IGN);
-                    clientUserID.Add(stream, response.UserID);
-
                     _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
                 }
             }
@@ -153,6 +184,170 @@ namespace Gemnet.PacketProcessors
             }
 
             return stringBuilder.ToString();
+        }
+
+        public static void CreateAccount(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+            CreateAccountReq request = CreateAccountReq.Deserialize(body);
+
+            var player = _playerManager.GetPlayerByStream(stream);
+
+
+            Console.WriteLine($"Avatar Creation: {request.UserIGN} with class: {request.ClassId}");
+
+            Dictionary<int, int> classIdToDefaultExo = new Dictionary<int, int>
+            {
+                { 1000175, 2040034 }, // Striker (M) -> Default Striker Exo
+                { 1000176, 2040035 }, // Soul Fighter (M) -> Default Soul Exo
+                { 1000177, 2040037 }, // Elementalist (M) -> Default Elementalist Exo
+                { 1000178, 2040038 }, // Alchemist (M) -> Default Alchemist Exo
+                { 1000247, 2040034 }, // Striker (F) -> Default Striker Exo (assuming same as male)
+                { 1000248, 2040035 }, // Soul Fighter (F) -> Default Soul Exo
+                { 1000249, 2040037 }, // Elementalist (F) -> Default Elementalist Exo
+                { 1000250, 2040038 }, // Alchemist (F) -> Default Alchemist Exo
+                { 1001792, 2040086 }, // Shaman (M) -> Default Shama Exo
+                { 1001793, 2040086 }, // Shaman (F) -> Default Shama Exo
+                { 1002689, 0 }        // Android (F) -> No default exo? (Or add if available)
+            };
+
+            int[] validClassIds = new int[]
+            {
+                1000175, // Striker (M)
+                1000176, // Soul Fighter (M)
+                1000177, // Elementalist (M)
+                1000178, // Alchemist (M)
+                1000247, // Striker (F)
+                1000248, // Soul Fighter (F)
+                1000249, // Elementalist (F)
+                1000250, // Alchemist (F)
+                1001792, // Shaman (M)
+                1001793, // Shaman (F)
+                1002689  // Android (F)
+            };
+
+            // 2040034 - Default Striker Exo
+            // 2040035 - Default Soul Exo
+            // 2040037 - Default Elementalist Exo
+            // 2040038 - Default Alchemist Exo
+            // 2040086 - Default Shama Exo
+
+            if (!validClassIds.Contains(request.ClassId))
+                return;
+
+            int defaultExoId = classIdToDefaultExo.ContainsKey(request.ClassId) ? classIdToDefaultExo[request.ClassId] : 0;
+
+            // Update State
+            ServerHolder.DatabaseInstance.Execute(ModelAccount.QueryUpdateState, new
+            {
+                ID = player.UserID,
+                state = AccountState.Active
+
+            });
+
+
+            // Update PlayerIGN
+            ServerHolder.DatabaseInstance.Execute(ModelAccount.QueryUpdateUserIGN, new
+            {
+                ID = player.UserID,
+                IGN = request.UserIGN
+
+            });
+
+            // Populate Inventory
+            ServerHolder.DatabaseInstance.Execute(ModelInventory.InsertItem, new
+            {
+                OID = player.UserID,
+                ID = request.ClassId,
+                END = 1000
+            });
+
+            ServerHolder.DatabaseInstance.Execute(ModelInventory.InsertItem, new
+            {
+                OID = player.UserID,
+                ID = defaultExoId,
+                END = 1000
+            });
+
+
+            ModelInventory serverIdQueryClass = null;
+            ModelInventory serverIdQueryExo = null;
+
+            // Populate Avatars with Class and Exo
+            try
+            {
+                serverIdQueryClass = ServerHolder.DatabaseInstance.SelectFirst<ModelInventory>(ModelInventory.GetServerID, new
+                {
+                    OID = player.UserID,
+                    ID = request.ClassId
+                });
+
+                serverIdQueryExo = ServerHolder.DatabaseInstance.SelectFirst<ModelInventory>(ModelInventory.GetServerID, new
+                {
+                    OID = player.UserID,
+                    ID = defaultExoId
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching server IDs: {ex.Message}");
+            }
+
+            Console.WriteLine($"Insert Avatar Items: {serverIdQueryClass.ServerID}, {serverIdQueryExo.ServerID}");
+
+            // Create 10 new avatars.
+            int NumberOfAvatars = 10;
+
+            for (int i = 0; i < NumberOfAvatars; i++)
+            {
+                ServerHolder.DatabaseInstance.Execute(ModelAvatar.QueryInsertNewAvatar, new
+                {
+                    OID = player.UserID,
+                    JobServerID = serverIdQueryClass.ServerID,
+                    ExoID = serverIdQueryExo.ServerID
+
+                });
+            }
+
+            Console.WriteLine($"Avatars inserted successfully.");
+
+
+            LoginRes response = new LoginRes();
+
+            var LoginQuery = ServerHolder.DatabaseInstance.SelectFirst<ModelAccount>(ModelAccount.QueryGetPlayerInfo, new
+            {
+                username = request.UserIGN
+            });
+
+            response.Type = type;
+            response.Action = action;
+            response.UserID = LoginQuery.UUID;
+            response.IGN = LoginQuery.IGN;
+            response.Exp = LoginQuery.EXP;
+            response.Carats = LoginQuery.Carats;
+            response.Medals = LoginQuery.Medals;
+            response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
+            response.Token = GenerateRandomString(30);
+            response.Region = "NA";
+            response.Country = "US";
+            response.ForumName = LoginQuery.ForumName;
+
+            Console.WriteLine($"Token: {response.Token}");
+
+            player.UserID = response.UserID;
+            player.UserIGN = response.IGN;
+            player.Carats = response.Carats;
+            player.EXP = response.Exp;
+            player.Token = response.Token;
+            player.ForumName = response.ForumName;
+            player.Region = response.Region;
+            player.Country = response.Country;
+            player.GUID = response.GUID;
+            player.CurrentAvatar = LoginQuery.CurrentAvatar;
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+
+
         }
 
         public static void ServerTime(ushort type, ushort action, NetworkStream stream)
@@ -195,20 +390,49 @@ namespace Gemnet.PacketProcessors
         public static void GetBuddyList(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
             action++;
-            Console.WriteLine($"Get Buddy List");
+            Console.WriteLine("Get Buddy List");
 
             GetBuddyListReq request = GetBuddyListReq.Deserialize(body);
 
-            GetBuddyListRes response = new GetBuddyListRes();
+            GetBuddyListRes response = new GetBuddyListRes
+            {
+                Type = type,
+                Action = action
+            };
 
-            response.Type = type;
-            response.Action = action;
+            var player = _playerManager.GetPlayerByStream(stream);
+
+            if (player == null)
+            {
+                Console.WriteLine("Player not found for stream.");
+
+            }
+
+            // Get all accepted friends where the player is either the requester or receiver
+            var buddyListQuery = ServerHolder.DatabaseInstance.Select<ModelFriends>(
+                "SELECT * FROM friends WHERE (RequesterUUID = @PlayerID OR ReceiverUUID = @PlayerID);",
+                new { PlayerID = player.UserID }
+            );
+
+            foreach (var friendship in buddyListQuery)
+            {
+                int friendId = (friendship.RequesterUUID == player.UserID) ? friendship.ReceiverUUID : friendship.RequesterUUID;
+
+                var friendPlayer = _playerManager.GetPlayerById(friendId);
+
+                response.Buddies.Add(new Buddy
+                {
+                    UserID = friendId,
+                    UserIGN = friendPlayer?.UserIGN ?? "Unknown"
+                });
+            }
+
 
             // Temporary hardcoded buddy list
             var Buddies = new List<Buddy>
             {
-                new Buddy { UserID = 999, UserIGN = "BUDDY1" },
-                new Buddy { UserID = 998, UserIGN = "BUDDY2" },
+                new Buddy { UserID = 999, UserIGN = "Nimonix" },
+                new Buddy { UserID = 998, UserIGN = "Gemnet" },
                 new Buddy { UserID = 997, UserIGN = "BUDDY3" },
                 new Buddy { UserID = 996, UserIGN = "BUDDY4" },
 
@@ -217,7 +441,6 @@ namespace Gemnet.PacketProcessors
             response.Buddies = Buddies;
 
             string hexOutput = string.Join(", ", response.Serialize().Select(b => $"0x{b:X2}"));
-            
             Console.WriteLine($"Get Test Data Buddy List: {hexOutput}");
 
 
@@ -231,12 +454,49 @@ namespace Gemnet.PacketProcessors
             AddBuddyReq request = AddBuddyReq.Deserialize(body);
             Console.WriteLine($"Add Buddy: {request.UserIGN}");
 
+            var player = _playerManager.GetPlayerByStream(stream);
+            var addingPlayer = _playerManager.GetPlayerByIGN(request.UserIGN);
 
-            // ON SUCCESS
-            //_ = ServerHolder.ServerInstance.SendPacket(type, 0x6, action, stream);
+            var result = false;
 
-            // ON FAILURE For now we will just send a failure response.
-            byte[] data = { 0x02, 0x10, 0x02, 0x08, 0xAB, 0x01, 0x00, 0x00, 0x41, 0x49, 0x4C, 0x28, 0x75, 0x6E, 0x6B, 0x6E, 0x6F, 0x77, 0x6E, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            if (player == null)
+            {
+                Console.WriteLine("Player not found in active players.");
+                result = false;
+            }
+
+            if (addingPlayer == null)
+            {
+                Console.WriteLine("Adding player not found.");
+                result = false;
+
+            }
+
+            var addBuddyQuery = ServerHolder.DatabaseInstance.Select<ModelFriends>(ModelFriends.QuerySendFriendRequest, new
+            {
+                RequesterUUID = player.UserID,
+                ReceiverUUID = addingPlayer.UserID
+            });
+
+            if (addBuddyQuery == null)
+            {
+                Console.WriteLine("Failed to add buddy.");
+                result = false;
+            }
+            else
+            {
+                Console.WriteLine($"Buddy {request.UserIGN} added successfully.");
+                result = true;
+            }
+
+            if (result)
+            {
+                // ON Success, send a response packet
+                _ = ServerHolder.ServerInstance.SendPacket(type, 0x6, action, stream);
+            }
+            else
+            {
+                byte[] data = { 0x02, 0x10, 0x02, 0x08, 0xAB, 0x01, 0x00, 0x00, 0x41, 0x49, 0x4C, 0x28, 0x75, 0x6E, 0x6B, 0x6E, 0x6F, 0x77, 0x6E, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -255,11 +515,12 @@ namespace Gemnet.PacketProcessors
                 0xC8, 0x8F, 0x87, 0x01, 0xB4, 0x58, 0x87, 0x00, 0xCB, 0x58, 0x87, 0x00, 0x01, 0x00, 0x00, 0x00, 0xFD, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xE3, 0x7C, 0x03, 0x00, 0x04,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x82, 0x87, 0x01, 0x98, 0x81, 0x87, 0x01, 0x14, 0x82, 0x87, 0x01, 0x60, 0x52, 0xEB, 0x05, 0x98, 0x81, 0x87, 0x01, 0x4A, 0x70 };
 
-            string hexOutput = string.Join(", ", data.Select(b => $"0x{b:X2}"));
-            Console.WriteLine($"Add Buddy Response: {hexOutput}");
+                _ = ServerHolder.ServerInstance.SendPacket(data, stream);
 
-            _ = ServerHolder.ServerInstance.SendPacket(data, stream);
-            
+            }
+
+
+
         }
 
         public static void TO_LOBBY(ushort type, ushort action, byte[] body, NetworkStream stream)
@@ -288,6 +549,82 @@ namespace Gemnet.PacketProcessors
             _ = ServerHolder.ServerInstance.SendPacket(data, stream);
 
         }
+
+        public static void UseMegaphone(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+
+            UseMegaphoneReq request = UseMegaphoneReq.Deserialize(body);
+            UseMegaphoneRes response = new UseMegaphoneRes();
+
+            response.Type = 528;
+            response.Action = 0x1A;
+
+            var player = _playerManager.GetPlayerByStream(stream);
+
+            response.Action = action;
+            response.Type = type;
+
+            response.Message = request.Message;
+
+            byte[] dataSuccess = { 0x02, 0x10, 0x00, 0x06, 0xB9, 0x00 };
+            _ = ServerHolder.ServerInstance.SendPacket(dataSuccess, stream);
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+        }
+
+        public static void ChangeNickname(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+
+            ChangeNicknameReq request = ChangeNicknameReq.Deserialize(body);
+            ChangeNicknameRes response = new ChangeNicknameRes();
+
+            var player = _playerManager.GetPlayerByStream(stream);
+
+            Console.WriteLine($"Changing Nickname {player.UserIGN} to {request.NewIGN}");
+
+            response.Type = type;
+            response.Action = action;
+
+            player.UserIGN = request.NewIGN;
+
+
+            // Test - Complete Guess
+            byte[] data = { 0x00, 0x10, 0x00, 0x06, 0x97, 0x00 };
+
+            _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+
+
+
+        }
+
+        public static void AddBuddyID(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+
+            ChangeNicknameReq request = ChangeNicknameReq.Deserialize(body);
+            ChangeNicknameRes response = new ChangeNicknameRes();
+
+            var player = _playerManager.GetPlayerByStream(stream);
+
+            Console.WriteLine($"Changing Nickname {player.UserIGN} to {request.NewIGN}");
+
+            response.Type = type;
+            response.Action = action;
+
+            player.UserIGN = request.NewIGN;
+
+
+            // Test - Complete Guess
+            byte[] data = { 0x00, 0x10, 0x00, 0x06, 0x99, 0x00 };
+
+            _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+
+
+
+        }
+
 
     }
 

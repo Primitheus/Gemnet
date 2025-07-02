@@ -12,7 +12,6 @@ public class LoginReq : HeaderPacket
     public string Email { get; set; }
     public string Password { get; set; }
 
-
     public new static LoginReq Deserialize(byte[] data)
     {
         LoginReq packet = new LoginReq();
@@ -80,6 +79,7 @@ public class LoginRes : HeaderPacket
     public int Exp { get; set; }
     public int Carats { get; set; }
     public string GUID { get; set; }
+    public int Medals { get; set; }
     public string Country { get; set; }
     public string Region { get; set; }
     public string Token { get; set; }
@@ -92,6 +92,7 @@ public class LoginRes : HeaderPacket
         public static readonly int Exp = 34;
         public static readonly int Carats = 38;
         public static readonly int GUID = 97;
+        public static readonly int Medals = 150;
         public static readonly int Country = 158;
         public static readonly int Region = 166;
         public static readonly int Token = 198;
@@ -112,6 +113,7 @@ public class LoginRes : HeaderPacket
         BitConverter.GetBytes(Exp).CopyTo(buffer, PropertyOffsets.Exp);
         BitConverter.GetBytes(Carats).CopyTo(buffer, PropertyOffsets.Carats);
         Encoding.ASCII.GetBytes(GUID).CopyTo(buffer, PropertyOffsets.GUID);
+        BitConverter.GetBytes(Medals).CopyTo(buffer, PropertyOffsets.Medals);
         Encoding.ASCII.GetBytes(Country).CopyTo(buffer, PropertyOffsets.Country);
         Encoding.ASCII.GetBytes(Region).CopyTo(buffer, PropertyOffsets.Region);
         Encoding.ASCII.GetBytes(Token).CopyTo(buffer, PropertyOffsets.Token);
@@ -121,4 +123,34 @@ public class LoginRes : HeaderPacket
     }
 }
 
+public class NoAvatarRes : HeaderPacket
+{
+    public ushort Unknown1 { get; set; }
+    public string Message { get; set; } = "no game account";
+
+    private struct PropertyOffsets
+    {
+        public static readonly int Unknown1 = 6;
+        public static readonly int Message = 8;
+
+    }
+
+    public override byte[] Serialize()
+    {
+        byte[] buffer = new byte[520];
+
+        Size = (ushort)buffer.Length;
+
+        base.Serialize().CopyTo(buffer, 0);
+
+        BitConverter.GetBytes(Unknown1).CopyTo(buffer, PropertyOffsets.Unknown1);
+        Encoding.ASCII.GetBytes(Message).CopyTo(buffer, PropertyOffsets.Message);
+
+
+        return buffer;
+    }
+
+
+
+}
 
