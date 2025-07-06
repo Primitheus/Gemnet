@@ -328,6 +328,10 @@ namespace SendPacket
                 case ActionQuery.FIN:
                     Query.FIN(type, action, packetBody, stream);
                     break;
+                case ActionQuery.SELECT_TEAM:
+                    Query.SelectTeam(type, action, packetBody, stream);
+                    break;
+
                 //case ActionQuery.EQUIPPING: // ACTION.EQUIPPING
                 // Process EQUIPPING action
                 //Query.Unknown8(type, action);

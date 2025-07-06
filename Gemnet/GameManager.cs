@@ -27,9 +27,10 @@ public class GameManager
 
     public class GameRoom
     {
+
+        public SortedSet<ushort> AvailableSlots { get; } = new();
+
         public string Password { get; set; } = string.Empty;
-
-
         public ushort RoomId { get; set; }
 
         public int RMExp { get; set; }
@@ -43,6 +44,7 @@ public class GameManager
         public byte CurrentPlayers => (byte)Players.Count;
         public byte GameState { get; set; } = 0x57;
         public byte MatchType { get; set; }
+        public byte BattleType { get; set; }
         public byte RoundNumber { get; set; }
         public int GameMode1 { get; set; }
         public int GameMode2 { get; set; }
@@ -64,14 +66,16 @@ public class GameManager
         //string password,
         byte maxPlayters,
         byte matchType,
+        byte battleType,
         byte roundNumber,
         int gm1,
         int gm2,
         int gm3)
 
     {
+
+        
         var creator = _playerManager.GetPlayerByStream(creatorStream);
-        creator.P2PID = playerP2pId;
 
         if (creator == null)
         {
@@ -93,14 +97,21 @@ public class GameManager
             RoomTitle = roomTitle,
             MaxPlayers = maxPlayters,
             MatchType = matchType,
+            BattleType = battleType,
             RoundNumber = roundNumber,
             GameMode1 = gm1,
             GameMode2 = gm2,
             GameMode3 = gm3,
             Country = "US",
             Region = "NA"
-
+            
         };
+
+        for (ushort i = 0; i < 7; i++)
+        {
+            room.AvailableSlots.Add(i);
+        }
+
 
         if (!room.Players.TryAdd(creator.UserID, creator))
         {
@@ -114,6 +125,10 @@ public class GameManager
         }
 
         Console.WriteLine($"Room Created: {roomId} by {creator.UserIGN} (P2PID: {playerP2pId}) Successfully");
+        creator.P2PID = playerP2pId;
+        creator.SlotID = 7;
+        creator.CurrentRoom = room.RoomId;
+
 
         return room;
 
@@ -179,19 +194,43 @@ public class GameManager
             throw new InvalidOperationException("Room Not Found");
         }
 
-        // if (room.isPassword == 0x43 && room.Password != password)
-        // {
-        //     throw new InvalidOperationException("Password is Incorrect.");
-        // }
-
-        if (room.Players.TryAdd(player.UserID, player))
+        if (room.CurrentPlayers >= room.MaxPlayers)
         {
-            return true;
+            return false; // Room full
+        }
+
+        // Don't allow joining if already in the room
+        if (room.Players.ContainsKey(player.UserID))
+        {
+            return false;
+        }
+
+        if (room.AvailableSlots.Any())
+        {
+            ushort slotId = room.AvailableSlots.Min;
+            room.AvailableSlots.Remove(slotId);
+
+            if (room.Players.TryAdd(player.UserID, player))
+            {
+                player.SlotID = slotId;
+                player.CurrentRoom = roomId;
+                player.Ready = false;
+
+
+                Console.WriteLine($"Player {player.UserIGN} joined Room {roomId} with SlotID {slotId}");
+
+                return true;
+            }
+            else
+            {
+                // Failed to add player, recycle slot
+                room.AvailableSlots.Add(player.SlotID);
+            }
         }
 
         return false;
-
     }
+
 
     public bool LeaveRoom(NetworkStream stream, ushort roomId)
     {
@@ -205,17 +244,61 @@ public class GameManager
         {
             if (room.Players.TryRemove(player.UserID, out _))
             {
-                // If the room is empty after removing the player, remove the room itself
+                if (player.SlotID != 7) // Don't recycle master slot
+                {
+                    room.AvailableSlots.Add(player.SlotID);
+                }
+
+                // Clear player state
+                player.CurrentRoom = 0;
+                player.SlotID = 0;
+                player.Ready = false;
+                player.Team = 0;
+
+
                 if (room.Players.Count == 0)
                 {
                     _gameRooms.TryRemove(roomId, out _);
                     Console.WriteLine($"Room {roomId} has been removed as it is now empty.");
                 }
+
                 return true;
             }
         }
+
         return false;
     }
+
+    public void HandleForceRoomMasterChange(GameRoom room, PlayerManager.Player oldMaster, PlayerManager.Player newMaster)
+    {
+        if (room.Players.IsEmpty)
+            return;
+
+
+    }
+
+    public PlayerManager.Player HandleRoomMasterChange(GameRoom room)
+    {
+        if (room.Players.IsEmpty)
+            return null;
+
+
+
+        //var newMaster = room.Players.Values.FirstOrDefault();
+        // new master should not have slotid 7.
+
+        var newMaster = room.Players.Values.FirstOrDefault(p => p.SlotID != 7);
+
+        ushort oldSlotId = newMaster.SlotID;
+
+        room.AvailableSlots.Add(oldSlotId);
+        newMaster.SlotID = 7;
+
+        return newMaster;
+
+    }
+
+
 
     // Get Players
     public List<PlayerManager.Player> GetPlayersInRoom(ushort roomId)

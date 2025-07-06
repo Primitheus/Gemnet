@@ -36,7 +36,9 @@ public class ModelAccount : IModel
                                                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
 
     public static readonly string QuerySelectAccount = "SELECT * FROM rumblefighter.accounts WHERE UUID = @ID";
-    public static readonly string QueryLoginAccount = "SELECT UUID, IGN, EXP, Carats, Astros, Medals, ForumName, State, CurrentAvatar FROM rumblefighter.accounts WHERE Email = @Email AND Password = @Password;";
+
+    public static readonly string QueryLoginAccount = "SELECT * FROM rumblefighter.accounts WHERE Email = @Email AND Password = @Password;";
+    public static readonly string QueryLoginAccountByEmail = "SELECT * FROM rumblefighter.accounts WHERE Email = @Email;";
 
     public static readonly string QueryCashCarats = "SELECT Carats FROM rumblefighter.accounts WHERE UUID = @ID";
     public static readonly string QueryCashAstros = "SELECT Astros FROM rumblefighter.accounts WHERE UUID = @ID";

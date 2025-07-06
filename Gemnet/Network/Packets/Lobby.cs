@@ -61,7 +61,7 @@ namespace Gemnet.Network.Packets
         public int unknownvalue5 { get; set; } //goes into unknownValue7
         public int MatchType {get; set;}
         public int unknownvalue6 {get; set;} //goes into unknownValue9
-        public int unknownvalue7 {get; set;} //goes into unknownValue10
+        public byte BattleType {get; set;} //goes into unknownValue10
         public int RoundNumber {get; set;}
         public int GameMode1 {get; set;}
         public int GameMode2 {get; set;} //goes into unknownValue11
@@ -80,7 +80,7 @@ namespace Gemnet.Network.Packets
             public static readonly int unknownvalue5 = 104;
             public static readonly int MatchType = 105;
             public static readonly int unknownvalue6 = 106;
-            public static readonly int unknownvalue7 = 107;
+            public static readonly int BattleType = 107;
             public static readonly int RoundNumber = 108;
             public static readonly int GameMode1 = 109;
             public static readonly int GameMode2 = 113;
@@ -118,7 +118,7 @@ namespace Gemnet.Network.Packets
             packet.MatchType = Convert.ToInt32(data[PropertyOffsets.MatchType]);
 
             packet.unknownvalue6 = Convert.ToInt32(data[PropertyOffsets.unknownvalue6]);
-            packet.unknownvalue7 = Convert.ToInt32(data[PropertyOffsets.unknownvalue7]);
+            packet.BattleType = data[PropertyOffsets.BattleType];
 
             packet.RoundNumber = Convert.ToInt32(data[PropertyOffsets.RoundNumber]);
 
@@ -213,7 +213,7 @@ namespace Gemnet.Network.Packets
         public int MatchType {get; set;}
         public int unknownValue8 {get; set;}
         public int unknownValue9 {get; set;}
-        public int unknownValue10 {get; set;}
+        public byte BattleType {get; set;}
         public int RoundNumber {get; set;}
         public int GameMode1 {get; set;}
         public int GameMode2 {get; set;}
@@ -249,7 +249,7 @@ namespace Gemnet.Network.Packets
             public static readonly int MatchType = 131;
             public static readonly int unknownValue8 = 133;
             public static readonly int unknownValue9 = 134;
-            public static readonly int unknownValue10 = 135;
+            public static readonly int BattleType = 135;
             public static readonly int RoundNumber = 136;
             public static readonly int GameMode1 = 137;
             public static readonly int GameMode2 = 141;
@@ -306,7 +306,7 @@ namespace Gemnet.Network.Packets
                                      
                 BitConverter.GetBytes(room.unknownValue8).CopyTo(buffer, PropertyOffsets.unknownValue8+i);
                 BitConverter.GetBytes(room.unknownValue9).CopyTo(buffer, PropertyOffsets.unknownValue9+i);
-                BitConverter.GetBytes(room.unknownValue10).CopyTo(buffer, PropertyOffsets.unknownValue10+i);
+                buffer[PropertyOffsets.BattleType+i] = room.BattleType;
 
                 BitConverter.GetBytes(room.GameMode1).CopyTo(buffer, PropertyOffsets.GameMode1+i);
                 

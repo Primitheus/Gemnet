@@ -35,6 +35,10 @@ namespace Gemnet.Network.Packets
     {
         public int UserID { get; set; }
         public string UserIGN { get; set; }
+        public byte StatusA { get; set; } // Accepted or Pending 0x4E = Accepted, 0x52 = Pending.
+        public byte StatusB { get; set; } // Online or Offline 0x46 = Offline, 0x4F = Online.
+
+        
 
         // UNKNOWN FIELD(S) HERE 
 
@@ -45,6 +49,7 @@ namespace Gemnet.Network.Packets
     {
         public ushort BuddyCount { get; set; }
         public List<Buddy> Buddies { get; set; }
+
 
         private struct PropertyOffsets
         {
@@ -89,7 +94,7 @@ namespace Gemnet.Network.Packets
                     {
                         byte[] useridBytes = BitConverter.GetBytes(buddy.UserID);
                         writer.Write(useridBytes);
-                        writer.Write((byte)0x00);
+                        //writer.Write((byte)0x00);
                     }
 
 
@@ -109,7 +114,8 @@ namespace Gemnet.Network.Packets
                     }
 
                     writer.Write(ignBytes);
-                    writer.Write((byte)0x4E); // terminator ??
+                    writer.Write(buddy.StatusA); // 0x4E = Accpeted, 0x52 = Pending.
+                    writer.Write(buddy.StatusB); // 0x46 = Offline, 0x4F = Online.
 
                     i++;
 

@@ -6,6 +6,7 @@ using System;
 using Gemnet.Packets;
 using System.Collections.Concurrent;
 using static Gemnet.Packets.Enums.Packets;
+using Gemnet.Network.Packets;
 public class Server
 {
     public static Dictionary<NetworkStream, string> clientUsernames = new Dictionary<NetworkStream, string>();
@@ -156,7 +157,7 @@ public class Server
 
         await stream.WriteAsync(data, 0, data.Length);
 
-        Console.WriteLine($"Sent Packet");
+        //Console.WriteLine($"Sent Packet");
     }
 
     public async Task SendPacket(byte[] data, int maxBufferSize, NetworkStream stream)
@@ -172,7 +173,7 @@ public class Server
             await stream.WriteAsync(data, bytesSent, bufferSize);
 
             bytesSent += bufferSize;
-            Console.WriteLine($"Sent Packet ({bytesSent}/{totalLength} bytes)");
+            //Console.WriteLine($"Sent Packet ({bytesSent}/{totalLength} bytes)");
 
         }
     }
@@ -193,7 +194,7 @@ public class Server
 
             }
 
-            Console.WriteLine($"Sent Packet");
+            Console.WriteLine($"Sent Packet Whilst Excluding Player Who Sent Req");
         }
     }
 

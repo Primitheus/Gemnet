@@ -139,7 +139,7 @@ namespace Gemnet.Network.Packets
         public ushort unknownValue7 { get; set; }
         public byte MatchType { get; set; } //Single or Team
         public byte unknownValue8 { get; set; }
-        public byte unknownValue9 { get; set; }
+        public byte BattleType { get; set; }
         public int RoundNumber { get; set; }
         public int GameMode1 { get; set; }
         public int GameMode2 { get; set; }
@@ -168,7 +168,7 @@ namespace Gemnet.Network.Packets
             public static readonly int unknownValue7 = 128;
             public static readonly int MatchType = 131;
             public static readonly int unknownValue8 = 132;
-            public static readonly int unknownValue9 = 133;
+            public static readonly int BattleType = 133;
             public static readonly int RoundNumber = 134;
             public static readonly int GameMode1 = 135;
             public static readonly int GameMode2 = 139;
@@ -208,7 +208,7 @@ namespace Gemnet.Network.Packets
             BitConverter.GetBytes(unknownValue7).CopyTo(buffer, PropertyOffsets.unknownValue7);
             buffer[PropertyOffsets.MatchType] = MatchType;
             buffer[PropertyOffsets.unknownValue8] = unknownValue8;
-            buffer[PropertyOffsets.unknownValue9] = unknownValue9;
+            buffer[PropertyOffsets.BattleType] = BattleType;
             BitConverter.GetBytes(RoundNumber).CopyTo(buffer, PropertyOffsets.RoundNumber);
 
             BitConverter.GetBytes(GameMode1).CopyTo(buffer, PropertyOffsets.GameMode1);
@@ -232,6 +232,7 @@ namespace Gemnet.Network.Packets
         public int PlayerLevel { get; set; }
         public int EXP { get; set; }
         public string IGN { get; set; }
+        public byte Team { get; set; }
         public int P2PID { get; set; }
         public string SomeID { get; set; }
         public int[] ItemID { get; set; }
@@ -300,6 +301,7 @@ namespace Gemnet.Network.Packets
             public static readonly int PlayerLevel = 2;
             public static readonly int EXP = 6;
             public static readonly int IGN = 10;
+            public static readonly int Team = 31;
             public static readonly int P2PID = 32;
             public static readonly int SomeID = 36;
             public static readonly int ItemID = 68;
@@ -315,7 +317,7 @@ namespace Gemnet.Network.Packets
 
         public override byte[] Serialize()
         {
-            Console.WriteLine($"Serialize Player Data Begin");
+            //Console.WriteLine($"Serialize Player Data Begin");
 
             byte[] buffer = new byte[PlayerNumber * 1562 + 16 + 2000];
             Size = (ushort)buffer.Length;
@@ -331,22 +333,24 @@ namespace Gemnet.Network.Packets
             BitConverter.GetBytes(unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3);
             BitConverter.GetBytes(PlayerNumber).CopyTo(buffer, PropertyOffsets.PlayerNumber);
 
-            Console.WriteLine($"Serialize Player Data");
+            //Console.WriteLine($"Serialize Player Data");
 
             foreach (var player in Players)
             {
-                Console.WriteLine($"Adding Player: {player.IGN}.");
+                //Console.WriteLine($"Adding Player: {player.IGN}.");
                 BitConverter.GetBytes(player.unknownValue1).CopyTo(buffer, PlayerPropertyOffsets.unknownValue1 + i);
                 BitConverter.GetBytes(player.PlayerLevel).CopyTo(buffer, PlayerPropertyOffsets.PlayerLevel + i);
                 BitConverter.GetBytes(player.EXP).CopyTo(buffer, PlayerPropertyOffsets.EXP + i);
                 Encoding.ASCII.GetBytes(player.IGN).CopyTo(buffer, PlayerPropertyOffsets.IGN + i);
+                buffer[PlayerPropertyOffsets.Team + i] = player.Team;
+
                 BitConverter.GetBytes(player.P2PID).CopyTo(buffer, PlayerPropertyOffsets.P2PID + i);
                 Encoding.ASCII.GetBytes(player.SomeID).CopyTo(buffer, PlayerPropertyOffsets.SomeID + i);
 
                 j = 0;
                 foreach (var item in player.ItemID)
                 {
-                    Console.WriteLine($"Adding Item: {item}");
+                    //Console.WriteLine($"Adding Item: {item}");
                     BitConverter.GetBytes(item).CopyTo(buffer, PlayerPropertyOffsets.ItemID + i + j);
                     j += 4;
                 }
@@ -360,7 +364,7 @@ namespace Gemnet.Network.Packets
 
             }
 
-            Console.WriteLine("Finished Adding Players");
+            //Console.WriteLine("Finished Adding Players");
 
 
             return buffer;
@@ -373,6 +377,7 @@ namespace Gemnet.Network.Packets
         public string IGN { get; set; }
         public int PlayerLevel { get; set; }
         public int EXP { get; set; }
+        public byte Team { get; set; }
         public int P2PID { get; set; }
         public string SomeID { get; set; }
         public int[] ItemID { get; set; }
@@ -405,6 +410,7 @@ namespace Gemnet.Network.Packets
             public static readonly int IGN = 4;
             public static readonly int PlayerLevel = 24;
             public static readonly int EXP = 28;
+            public static readonly int Team = 31;
             public static readonly int P2PID = 32;
             public static readonly int SomeID = 36;
             public static readonly int ItemID = 68;
@@ -447,6 +453,7 @@ namespace Gemnet.Network.Packets
                 Encoding.ASCII.GetBytes(player.IGN).CopyTo(buffer, PropertyPlayerOffsets.IGN + i);
                 BitConverter.GetBytes(player.PlayerLevel).CopyTo(buffer, PropertyPlayerOffsets.PlayerLevel + i);
                 BitConverter.GetBytes(player.EXP).CopyTo(buffer, PropertyPlayerOffsets.EXP + i);
+                buffer[PropertyPlayerOffsets.Team + i] = player.Team;
                 BitConverter.GetBytes(player.P2PID).CopyTo(buffer, PropertyPlayerOffsets.P2PID + i);
                 Encoding.ASCII.GetBytes(player.SomeID).CopyTo(buffer, PropertyPlayerOffsets.SomeID + i);
                 j = 0;
@@ -617,7 +624,7 @@ namespace Gemnet.Network.Packets
         private struct PropertyOffsets
         {
             public static readonly int SizeOfData = 6;
-            
+
 
         }
 
@@ -780,26 +787,21 @@ namespace Gemnet.Network.Packets
 
 
     }
-    
+
     public class RoomUpdatePlayersRes : HeaderPacket
     {
         public string PlayerWhoLeft { get; set; }
-        public string NewRoomMaster { get; set; }
-        public int unknownValue1 { get; set; }
-        
 
         private struct PropertyOffsets
         {
             public static readonly int PlayerWhoLeft = 6;
-            public static readonly int NewRoomMaster = 32;
-            public static readonly int unknownValue1 = 52;
-           
+
         }
 
         public override byte[] Serialize()
         {
 
-            byte[] buffer = new byte[64];
+            byte[] buffer = new byte[26];
             Size = (ushort)(buffer.Length);
 
             int offset = 0;
@@ -807,8 +809,6 @@ namespace Gemnet.Network.Packets
             base.Serialize().CopyTo(buffer, offset);
 
             Encoding.ASCII.GetBytes(PlayerWhoLeft).CopyTo(buffer, PropertyOffsets.PlayerWhoLeft);
-            // Encoding.ASCII.GetBytes(NewRoomMaster).CopyTo(buffer, PropertyOffsets.NewRoomMaster);
-            BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
 
 
             return buffer;
@@ -816,5 +816,104 @@ namespace Gemnet.Network.Packets
 
 
     }
+
+    public class UpdateRoomMasterRes : HeaderPacket
+    {
+        public string NewRoomMaster { get; set; }
+        public int Unknown1 { get; set; }
+
+        private struct PropertyOffsets
+        {
+            public static readonly int NewRoomMaster = 6;
+            public static readonly int Unknown1 = 26;
+
+
+        }
+
+        public override byte[] Serialize()
+        {
+
+            byte[] buffer = new byte[30];
+            Size = (ushort)(buffer.Length);
+
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+
+            Encoding.ASCII.GetBytes(NewRoomMaster).CopyTo(buffer, PropertyOffsets.NewRoomMaster);
+            BitConverter.GetBytes(Unknown1).CopyTo(buffer, PropertyOffsets.Unknown1);
+
+
+            return buffer;
+        }
+
+
+
+    }
+
+    public class SelectTeamReq : HeaderPacket
+    {
+
+        public byte Team { get; set; } // This is the room ID, not the P2P ID
+
+        private struct PropertyOffsets
+        {
+            public static readonly int Team = 6;
+
+
+
+        }
+
+        public new static SelectTeamReq Deserialize(byte[] data)
+        {
+            SelectTeamReq packet = new SelectTeamReq();
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+
+            packet.Team = data[PropertyOffsets.Team];
+
+
+            return packet;
+        }
+
+
+    }
+
+
+    public class SelectTeamRes : HeaderPacket
+    {
+
+        public string UserIGN { get; set; }
+        public byte Team { get; set; } // This is the room ID, not the P2P ID
+
+        private struct PropertyOffsets
+        {
+            public static readonly int UserIGN = 6; // goes into Unknown
+            public static readonly int Team = 26;
+
+
+        }
+
+        public override byte[] Serialize()
+        {
+            byte[] buffer = new byte[27];
+            Size = (ushort)(buffer.Length);
+
+            int offset = 0;
+
+            base.Serialize().CopyTo(buffer, offset);
+
+            Encoding.ASCII.GetBytes(UserIGN).CopyTo(buffer, PropertyOffsets.UserIGN);
+            buffer[PropertyOffsets.Team] = Team;
+
+            return buffer;
+        
+        }
+
+
+    }
+
 
 }

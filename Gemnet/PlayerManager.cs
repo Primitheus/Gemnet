@@ -24,8 +24,8 @@ public class PlayerManager
     public class Player
     {
 
+        // User Info
         public int UserID { get; set; }
-        public int P2PID { get; set; }
         public string UserIGN { get; set; }
         public int CurrentAvatar { get; set; }
         public int Carats { get; set; }
@@ -36,15 +36,19 @@ public class PlayerManager
         public string Country { get; set; }
         public string Region { get; set; }
 
-        // unimplemented yet
+        // Guild Info
         public string GuildName { get; set; }
+
+        // Room Tracking
         public ushort CurrentRoom { get; set; }
         public ushort SlotID { get; set; } // Slot ID in the room
         public bool Ready { get; set; }
+        public byte Team { get; set; } // 0x00 = Blue, 0x01 = Red. 
 
         // Session
         public DateTime LoginTime { get; set; }
         public NetworkStream Stream { get; set; }
+        public int P2PID { get; set; }
 
 
     }
