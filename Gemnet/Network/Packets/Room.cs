@@ -141,9 +141,11 @@ namespace Gemnet.Network.Packets
         public byte unknownValue8 { get; set; }
         public byte BattleType { get; set; }
         public int RoundNumber { get; set; }
-        public int GameMode1 { get; set; }
-        public int GameMode2 { get; set; }
-        public int GameMode3 { get; set; }
+        public ushort GameMode1 { get; set; }
+        public ushort GameMode2 { get; set; }
+        public ushort GameMode3 { get; set; }
+        
+
         public int UnknownValue13 { get; set; }
         public byte[] Time { get; set; }
         public string Country { get; set; }
@@ -684,28 +686,34 @@ namespace Gemnet.Network.Packets
 
     public class ChangeMapReq : HeaderPacket
     {
-        public int unknownValue1 { get; set; }
-        public int unknownValue2 { get; set; }
-        public int unknownValue3 { get; set; }
-        public int unknownValue4 { get; set; }
-        public int unknownValue5 { get; set; }
-        public int Map1 { get; set; }
-        public int unknownValue7 { get; set; }
-        public int Map2 { get; set; }
-        public int unknownValue8 { get; set; }
-        public int Map3 { get; set; }
+        public ushort unknownValue1 { get; set; }
+        public ushort unknownValue2 { get; set; }
+
+        public byte unknownValue3 { get; set; }
+
+        public byte RoundNumber { get; set; }
+        public int GameMode1 { get; set; }
+        public int GameMode2 { get; set; }
+        public int GameMode3 { get; set; }
+
+        public ushort Map1 { get; set; }
+        public ushort Map2 { get; set; }
+        public ushort Map3 { get; set; }
 
         private struct PropertyOffsets
         {
             public static readonly int unknownValue1 = 6;
             public static readonly int unknownValue2 = 8;
+
             public static readonly int unknownValue3 = 11;
-            public static readonly int unknownValue4 = 12;
-            public static readonly int unknownValue5 = 13;
-            public static readonly int Map1 = 15;
-            public static readonly int unknownValue7 = 17;
-            public static readonly int Map2 = 19;
-            public static readonly int unknownValue8 = 21;
+
+            public static readonly int RoundNumber = 12;
+            public static readonly int GameMode1 = 13;
+            public static readonly int GameMode2 = 15;
+            public static readonly int GameMode3 = 17;
+
+            public static readonly int Map1 = 19;
+            public static readonly int Map2 = 21;
             public static readonly int Map3 = 23;
 
         }
@@ -718,16 +726,18 @@ namespace Gemnet.Network.Packets
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            packet.unknownValue1 = Convert.ToInt32(data[PropertyOffsets.unknownValue1]);
-            packet.unknownValue2 = Convert.ToInt32(data[PropertyOffsets.unknownValue2]);
-            packet.unknownValue3 = Convert.ToInt32(data[PropertyOffsets.unknownValue3]);
-            packet.unknownValue4 = Convert.ToInt32(data[PropertyOffsets.unknownValue4]);
-            packet.unknownValue5 = Convert.ToInt32(data[PropertyOffsets.unknownValue5]);
-            packet.Map1 = Convert.ToInt32(data[PropertyOffsets.Map1]);
-            packet.unknownValue7 = Convert.ToInt32(data[PropertyOffsets.unknownValue7]);
-            packet.Map2 = Convert.ToInt32(data[PropertyOffsets.Map2]);
-            packet.unknownValue8 = Convert.ToInt32(data[PropertyOffsets.unknownValue8]);
-            packet.Map3 = Convert.ToInt32(data[PropertyOffsets.Map3]);
+            packet.unknownValue1 = Convert.ToUInt16(data[PropertyOffsets.unknownValue1]);
+            packet.unknownValue2 = Convert.ToUInt16(data[PropertyOffsets.unknownValue2]);
+
+            packet.unknownValue3 = data[PropertyOffsets.unknownValue3];
+
+            packet.RoundNumber = data[PropertyOffsets.RoundNumber];
+            packet.GameMode1 = Convert.ToUInt16(data[PropertyOffsets.GameMode1]);
+            packet.GameMode2 = Convert.ToUInt16(data[PropertyOffsets.GameMode2]);
+            packet.GameMode3 = Convert.ToUInt16(data[PropertyOffsets.GameMode3]);
+            packet.Map1 = BitConverter.ToUInt16(data, PropertyOffsets.Map1);
+            packet.Map2 = Convert.ToUInt16(data[PropertyOffsets.Map2]);
+            packet.Map3 = Convert.ToUInt16(data[PropertyOffsets.Map3]);
 
             return packet;
         }
@@ -736,28 +746,34 @@ namespace Gemnet.Network.Packets
 
     public class ChangeMapRes : HeaderPacket
     {
-        public int unknownValue1 { get; set; }
-        public int unknownValue2 { get; set; }
-        public int unknownValue3 { get; set; }
-        public int unknownValue4 { get; set; }
-        public int unknownValue5 { get; set; }
-        public int Map1 { get; set; }
-        public int unknownValue7 { get; set; }
-        public int Map2 { get; set; }
-        public int unknownValue8 { get; set; }
-        public int Map3 { get; set; }
+        public ushort unknownValue1 { get; set; }
+        public ushort unknownValue2 { get; set; }
+
+        public byte unknownValue3 { get; set; }
+
+        public byte RoundNumber { get; set; }
+        public int GameMode1 { get; set; }
+        public int GameMode2 { get; set; }
+        public int GameMode3 { get; set; }
+
+        public ushort Map1 { get; set; }
+        public ushort Map2 { get; set; }
+        public ushort Map3 { get; set; }
 
         private struct PropertyOffsets
         {
             public static readonly int unknownValue1 = 6;
             public static readonly int unknownValue2 = 8;
+
             public static readonly int unknownValue3 = 11;
-            public static readonly int unknownValue4 = 12;
-            public static readonly int unknownValue5 = 13;
-            public static readonly int Map1 = 15;
-            public static readonly int unknownValue7 = 17;
-            public static readonly int Map2 = 19;
-            public static readonly int unknownValue8 = 21;
+
+            public static readonly int RoundNumber = 12;
+            public static readonly int GameMode1 = 13;
+            public static readonly int GameMode2 = 15;
+            public static readonly int GameMode3 = 17;
+
+            public static readonly int Map1 = 19;
+            public static readonly int Map2 = 21;
             public static readonly int Map3 = 23;
         }
 
@@ -773,13 +789,16 @@ namespace Gemnet.Network.Packets
 
             BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
             BitConverter.GetBytes(unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2);
-            BitConverter.GetBytes(unknownValue3).CopyTo(buffer, PropertyOffsets.unknownValue3);
-            BitConverter.GetBytes(unknownValue4).CopyTo(buffer, PropertyOffsets.unknownValue4);
-            BitConverter.GetBytes(unknownValue5).CopyTo(buffer, PropertyOffsets.unknownValue5);
+
+            buffer[PropertyOffsets.unknownValue3] = unknownValue3;
+            buffer[PropertyOffsets.RoundNumber] = RoundNumber;
+
+            BitConverter.GetBytes(GameMode1).CopyTo(buffer, PropertyOffsets.GameMode1);
+            BitConverter.GetBytes(GameMode2).CopyTo(buffer, PropertyOffsets.GameMode2);
+            BitConverter.GetBytes(GameMode3).CopyTo(buffer, PropertyOffsets.GameMode3);
+
             BitConverter.GetBytes(Map1).CopyTo(buffer, PropertyOffsets.Map1);
-            BitConverter.GetBytes(unknownValue7).CopyTo(buffer, PropertyOffsets.unknownValue7);
             BitConverter.GetBytes(Map2).CopyTo(buffer, PropertyOffsets.Map2);
-            BitConverter.GetBytes(unknownValue8).CopyTo(buffer, PropertyOffsets.unknownValue8);
             BitConverter.GetBytes(Map3).CopyTo(buffer, PropertyOffsets.Map3);
 
             return buffer;

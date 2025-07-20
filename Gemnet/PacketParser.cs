@@ -39,6 +39,9 @@ namespace SendPacket
                     case (HeaderType.QUERY):
                         ProcessQueryPacket(action, packetBody, stream);
                         break;
+                    case (HeaderType.GUILD):
+                        ProcessGuildPacket(action, packetBody, stream);
+                        break;
                     
                     default:
                         Console.WriteLine($"Unknown packet type: {type}");
@@ -99,6 +102,13 @@ namespace SendPacket
                 case ActionLogin.ADD_BUDDY_ID:
                     Login.AddBuddyID(type, action, packetBody, stream);
                     break;
+                case ActionLogin.GEM_LOGIN:
+                    Login.GemLogin(type, action, packetBody, stream);
+                    break;
+                case ActionLogin.GEM_UNKNOWN_1:
+                    Login.GemUnknown1(type, action, packetBody, stream);
+                    break;
+
 
                 default:
                     Console.WriteLine($"Unknown action for Login packet: {action}");
@@ -106,6 +116,29 @@ namespace SendPacket
             }
         }
 
+        public void ProcessGuildPacket(ushort action, byte[] packetBody, NetworkStream stream)
+        {
+            String TypeName = Enum.GetName(HeaderType.GUILD);
+            String headerAction = Enum.GetName((ActionGuild)action);
+
+            Console.WriteLine($"Received packet: Type={TypeName}, Action={headerAction}"); // Body={BitConverter.ToString(packetBody, NetworkStream stream)}
+            ushort type = (ushort)(HeaderType.GUILD);
+
+            switch ((ActionGuild)action)
+            {
+                case ActionGuild.GET_GUILD_RANK: // ACTION.GAMEGUARD_START
+                    Guild.GetGuildRank(type, action, packetBody, stream);
+                    break;
+                case ActionGuild.GET_GUILD_RANK_LIST:
+                    Guild.GetGuildRankList(type, action, packetBody, stream);
+                    break;
+                
+                default:
+                    Console.WriteLine($"Unknown action for Guild packet: {action}");
+                    break;
+            }
+        }
+        
         public void ProcessGeneralPacket(ushort action, byte[] packetBody, NetworkStream stream)
         {
             String TypeName = Enum.GetName(HeaderType.GENERAL);
@@ -136,7 +169,7 @@ namespace SendPacket
                     break;
                 case ActionGeneral.UNKNOWN_3: // ACTION.UNKNOWN_3
                                               // Process UNKNOWN_3 action
-                    General.Unknown3(type, action, stream); 
+                    General.Unknown3(type, action, stream);
                     break;
                 case ActionGeneral.UNKNOWN_4: // ACTION.UNKNOWN_4
                                               // Process UNKNOWN_4 action
@@ -155,7 +188,7 @@ namespace SendPacket
                     General.MyInfo(type, action, stream);
                     break;
                 case ActionGeneral.QUESTS: // ACTION.UNKNOWN_5
-                                              // Process UNKNOWN_5 action
+                                           // Process UNKNOWN_5 action
                     General.Quests(type, action, packetBody, stream);
                     break;
                 case ActionGeneral.BUYING: // ACTION.BUYING
@@ -182,8 +215,20 @@ namespace SendPacket
                 case ActionGeneral.GET_USER_INFO_RENEWAL:
                     General.GetUserInfoRenewal(type, action, packetBody, stream);
                     break;
+                case ActionGeneral.GEM_UNKNOWN_A:
+                    General.GemUnknownA(type, action, packetBody, stream);
+                    break;
+                case ActionGeneral.GEM_UNKNOWN_1:
+                    General.GemUnknown1(type, action, packetBody, stream);
+                    break;
+                case ActionGeneral.GEM_UNKNOWN_2:
+                    General.GemUnknown2(type, action, packetBody, stream);
+                    break;
+                case ActionGeneral.GEM_UNKNOWN_3:
+                    General.GemUnknown3(type, action, packetBody, stream);
+                    break;
                 default:
-            
+
                     Console.WriteLine($"Unknown action for General packet: {action}");
                     break;
             }

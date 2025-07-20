@@ -7,10 +7,17 @@ using Gemnet.Packets;
 using System.Collections.Concurrent;
 using static Gemnet.Packets.Enums.Packets;
 using Gemnet.Network.Packets;
+using Gemnet.Settings;
+using Gemnet.Security;
+using static Program;
+
+
 public class Server
 {
-    public static Dictionary<NetworkStream, string> clientUsernames = new Dictionary<NetworkStream, string>();
-    public static Dictionary<NetworkStream, int> clientUserID = new Dictionary<NetworkStream, int>();
+
+    private static PlayerManager _playerManager = ServerHolder._playerManager;
+    private static GameManager _gameManager = ServerHolder._gameManager;
+
 
     private const int MaxBufferSize = 1440;
     private const int PacketHeaderSize = 6; // 2 bytes for type + 2 bytes for length + 2 bytes for action
@@ -18,14 +25,18 @@ public class Server
     private const int LengthOffset = 2;
     private const int ActionOffset = 4;
 
+    private Settings.SData _settings;
+
     private TcpListener tcpListener;
     private ConcurrentBag<TcpClient> clients = new ConcurrentBag<TcpClient>();
+    private ConcurrentDictionary<NetworkStream, ClientCipherState> clientCiphers = new();
 
     Parser parser = new Parser();
 
     public Server(IPAddress ipAddress, int port)
     {
         tcpListener = new TcpListener(IPAddress.Any, port);
+        _settings = Settings.ImportSettings("./settings.json");
 
     }
 
@@ -33,6 +44,7 @@ public class Server
     {
         tcpListener.Start();
         Console.WriteLine($"<Gemnet - Rumble Fighter Server Emulator> Port: {tcpListener.LocalEndpoint}");
+        Console.WriteLine($"Settings: {_settings.Port}, {_settings.UseEncryption}, {_settings.RC4Key}");
 
 
         while (true)
@@ -40,6 +52,7 @@ public class Server
             TcpClient client = await tcpListener.AcceptTcpClientAsync();
             clients.Add(client);
             _ = ProcessClient(client);
+
         }
     }
 
@@ -50,6 +63,12 @@ public class Server
             var stream = client.GetStream();
             Console.WriteLine($"Client connected: {((IPEndPoint)client.Client.RemoteEndPoint).ToString()}");
 
+            if (_settings.UseEncryption)
+            {
+                var cipherState = new ClientCipherState(_settings.RC4Key);
+                clientCiphers.TryAdd(stream, cipherState);
+
+            }
 
             byte[] buffer = new byte[MaxBufferSize];
             int bytesRead = 0;
@@ -59,10 +78,19 @@ public class Server
                 await ParsePackets(buffer, bytesRead, stream);
             }
         }
+        catch (IOException ex)
+        {
+            Console.WriteLine("Client connection lost.");
+        }
+        catch (ObjectDisposedException)
+        {
+            Console.WriteLine("Stream already disposed.");
+        }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error processing client: {ex.Message}");
+            Console.WriteLine($"Unexpected error: {ex.Message}");
         }
+
         finally
         {
             clients.TryTake(out client);
@@ -75,6 +103,7 @@ public class Server
     {
 
         int offset = 0;
+        byte[] packet = new byte[bytesRead];
 
         while (offset < bytesRead)
         {
@@ -84,9 +113,25 @@ public class Server
                 break;
             }
 
-            ushort type = (ushort)((buffer[offset + TypeOffset] << 8) | buffer[offset + TypeOffset + 1]);
-            ushort length = (ushort)((buffer[offset + LengthOffset] << 8) | buffer[offset + LengthOffset + 1]);
-            ushort action = BitConverter.ToUInt16(buffer, offset + ActionOffset);
+            // if encryption enabled then decrypt the packet.
+            if (_settings.UseEncryption)
+            {
+                if (clientCiphers.TryGetValue(stream, out var cipherState))
+                {
+                    // To decrypt incoming data:
+                    packet = cipherState.Decryptor.Decrypt(buffer, bytesRead);
+
+                }
+            }
+            else
+            {
+                packet = buffer;
+            }
+
+
+            ushort type = (ushort)((packet[offset + TypeOffset] << 8) | packet[offset + TypeOffset + 1]);
+            ushort length = (ushort)((packet[offset + LengthOffset] << 8) | packet[offset + LengthOffset + 1]);
+            ushort action = BitConverter.ToUInt16(packet, offset + ActionOffset);
 
             if (length > bytesRead)
             {
@@ -99,7 +144,7 @@ public class Server
 
             // Process the packet (type, action, packetBody)
 
-            parser.ProcessPacketAsync(type, action, buffer, stream);
+            parser.ProcessPacketAsync(type, action, packet, stream);
 
             offset += PacketHeaderSize + length;
         }
@@ -124,6 +169,15 @@ public class Server
         packet[4] = (byte)action;
         packet[5] = (byte)(action >> 8);
 
+
+        if (_settings.UseEncryption)
+        {
+            if (clientCiphers.TryGetValue(stream, out var cipherState))
+            {
+                packet = cipherState.Encryptor.Encrypt(packet);
+            }
+        }
+
         await stream.WriteAsync(packet, 0, packet.Length);
 
         Console.WriteLine($"Sent Packet: Type={TypeName}, Action={action:X2}, Length={length}");
@@ -147,13 +201,30 @@ public class Server
 
         }
 
+        if (_settings.UseEncryption)
+        {
+            if (clientCiphers.TryGetValue(stream, out var cipherState))
+            {
+                packet = cipherState.Encryptor.Encrypt(packet);
+            }
+        }
+
         await stream.WriteAsync(packet, 0, packet.Length);
+
         Console.WriteLine("PACKET TEST!");
         Console.WriteLine($"Sent Packet: Type={TypeName}, Action={action:X2}, Length={length}");
     }
 
     public async Task SendPacket(byte[] data, NetworkStream stream)
     {
+
+        if (_settings.UseEncryption)
+        {
+            if (clientCiphers.TryGetValue(stream, out var cipherState))
+            {
+                data = cipherState.Encryptor.Encrypt(data, data.Length);
+            }
+        }
 
         await stream.WriteAsync(data, 0, data.Length);
 
@@ -170,12 +241,60 @@ public class Server
             int remainingLength = totalLength - bytesSent;
             int bufferSize = Math.Min(maxBufferSize, remainingLength);
 
+            if (_settings.UseEncryption)
+            {
+                if (clientCiphers.TryGetValue(stream, out var cipherState))
+                {
+                    data = cipherState.Encryptor.Encrypt(data);
+                }
+            }
+                
             await stream.WriteAsync(data, bytesSent, bufferSize);
 
             bytesSent += bufferSize;
             //Console.WriteLine($"Sent Packet ({bytesSent}/{totalLength} bytes)");
 
         }
+    }
+
+    public async Task SendToRoom(byte[] data, ushort roomId)
+    {
+        //var room = _gameManager.GetRoom(roomId);
+        var playersInRoom = _gameManager.GetPlayersInRoom(roomId);
+        Console.WriteLine("Sending To All Players in Room: {roomId}");
+
+            
+        foreach (var player in playersInRoom)
+        {
+            Console.WriteLine($"Sending To Player: {player.UserIGN}");
+            await SendPacket(data, player.Stream);
+
+        }
+
+    }
+
+
+    public async Task SendToRoomExcludeSender(byte[] data, ushort roomId, NetworkStream sendingStream)
+    {
+        //var room = _gameManager.GetRoom(roomId);
+        var playersInRoom = _gameManager.GetPlayersInRoom(roomId);
+        Console.WriteLine("Sending To All Players in Room but Excluding Sender: {roomId}");
+
+            
+        foreach (var player in playersInRoom)
+        {
+            if (player.Stream == sendingStream)
+            {
+                Console.WriteLine("Skipping Sender");
+            }
+            else
+            {
+                await SendPacket(data, player.Stream);
+
+            }
+
+        }
+
     }
 
     public async Task SendPacket(byte[] data, NetworkStream senderStream, bool Exclude)
@@ -187,9 +306,19 @@ public class Server
             var clientStream = client.GetStream();
             if (clientStream == senderStream && Exclude == true)
             {
+                Console.WriteLine("Skipping Sender");
+                
             }
             else
             {
+                if (_settings.UseEncryption)
+                {
+                    if (clientCiphers.TryGetValue(clientStream, out var cipherState))
+                    {
+                        data = cipherState.Encryptor.Encrypt(data);
+                    }
+                }
+
                 await clientStream.WriteAsync(data, 0, data.Length);
 
             }
@@ -206,11 +335,20 @@ public class Server
         {
 
             var clientStream = client.GetStream();
+
+            if (_settings.UseEncryption)
+            {
+                if (clientCiphers.TryGetValue(clientStream, out var cipherState))
+                {
+                    data = cipherState.Encryptor.Encrypt(data);
+                }
+            }
+
             await clientStream.WriteAsync(data, 0, data.Length);
 
             Console.WriteLine($"Sending Notify Packet");
         }
-    } 
-    
+    }
+
 
 }

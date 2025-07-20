@@ -63,9 +63,9 @@ namespace Gemnet.Network.Packets
         public int unknownvalue6 {get; set;} //goes into unknownValue9
         public byte BattleType {get; set;} //goes into unknownValue10
         public int RoundNumber {get; set;}
-        public int GameMode1 {get; set;}
-        public int GameMode2 {get; set;} //goes into unknownValue11
-        public int GameMode3 {get; set;} //goes into unknownValue12
+        public ushort GameMode1 {get; set;}
+        public ushort GameMode2 {get; set;} //goes into unknownValue11
+        public ushort GameMode3 {get; set;} //goes into unknownValue12
 
         private class PropertyOffsets
         {
@@ -122,9 +122,9 @@ namespace Gemnet.Network.Packets
 
             packet.RoundNumber = Convert.ToInt32(data[PropertyOffsets.RoundNumber]);
 
-            packet.GameMode1 = Convert.ToInt32(data[PropertyOffsets.GameMode1]);
-            packet.GameMode2 = Convert.ToInt32(data[PropertyOffsets.GameMode2]);
-            packet.GameMode3 = Convert.ToInt32(data[PropertyOffsets.GameMode3]);
+            packet.GameMode1 = Convert.ToUInt16(data[PropertyOffsets.GameMode1]);
+            packet.GameMode2 = Convert.ToUInt16(data[PropertyOffsets.GameMode2]);
+            packet.GameMode3 = Convert.ToUInt16(data[PropertyOffsets.GameMode3]);
 
             return packet;
         }

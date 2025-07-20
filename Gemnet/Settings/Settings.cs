@@ -13,6 +13,9 @@ namespace Gemnet.Settings
             public UInt16 P2PPort { get; set; }
 
             public string DBConnectionString { get; set; }
+            public string RC4Key { get; set; }
+
+            public bool UseEncryption { get; set; }
         }
 
         public static SData ImportSettings()
@@ -20,11 +23,13 @@ namespace Gemnet.Settings
             var envSettings = Environment.GetEnvironmentVariables();
 
             return new SData()
-            { 
+            {
                 ipAddress = envSettings["ipAddress"] as string,
                 Port = UInt16.Parse(envSettings["Port"] as string),
                 P2PPort = UInt16.Parse(envSettings["P2PPort"] as string),
                 DBConnectionString = envSettings["DBConnectionString"] as string,
+                UseEncryption = bool.Parse(envSettings["UseEncryption"] as string),
+                RC4Key = envSettings["RC4Key"] as string,
             };
         }
 

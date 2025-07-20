@@ -23,7 +23,7 @@ public static readonly string QueryCreateTable = @"CREATE TABLE IF NOT EXISTS `f
 
 
     // Send Friend Request
-    public static readonly string QuerySendFriendRequest = "INSERT INTO friends (RequesterUUID, ReceiverUUID, Status) VALUES (@RequesterUUID, @ReceiverUUID, 'Pending');";
+    public static readonly string QuerySendFriendRequest = "INSERT INTO friends (RequesterUUID, ReceiverUUID, Status) VALUES (@RequesterUUID, @ReceiverUUID, 'Accepted');";
 
     // Accept Friend Request
     public static readonly string QueryAcceptFriendRequest = "UPDATE friends SET Status = 'Accepted' WHERE RequesterUUID = @RequesterUUID AND ReceiverUUID = @ReceiverUUID;";

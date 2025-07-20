@@ -9,6 +9,7 @@ using static Program;
 using static Server;
 using System.Text;
 using BCrypt.Net;
+using Org.BouncyCastle.Asn1.Misc;
 
 
 
@@ -44,32 +45,41 @@ namespace Gemnet.PacketProcessors
         {
             action++;
             Console.WriteLine("[Credential Check]");
+
+            string hexOutput = string.Join(", ", body.Select(b => $"0x{b:X2}"));
+            Console.WriteLine($"TEST: {hexOutput}");
+
+
+
             LoginReq request = LoginReq.Deserialize(body);
 
+
+
+
+            Console.WriteLine($"Request: {request.Email}");
             //string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
 
             static void SendToAccountCreation(NetworkStream stream, int UserId)
+            {
+                NoAvatarRes response = new NoAvatarRes();
+                response.Type = 528;
+                response.Action = 389;
+
+                response.Unknown1 = 4097;
+                response.Message = "no game account";
+
+                PlayerManager.Player player = new PlayerManager.Player
                 {
-                    NoAvatarRes response = new NoAvatarRes();
-                    response.Type = 528;
-                    response.Action = 389;
 
-                    response.Unknown1 = 4097;
-                    response.Message = "no game account";
+                    UserID = UserId
 
-                    PlayerManager.Player player = new PlayerManager.Player
-                    {
+                };
 
-                        UserID = UserId
+                _playerManager.TryAddPlayer(stream, player);
+                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
-                    };
-
-                    _playerManager.TryAddPlayer(stream, player);
-                    _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
-
-
-                }
+            }
 
             static void SendLoginFailResponse(string errorMessage, NetworkStream stream)
             {
@@ -180,6 +190,65 @@ namespace Gemnet.PacketProcessors
                     _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
                 }
             }
+
+
+        }
+
+        public static void GemLogin(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+            Console.WriteLine("[Gem Fighter Login]");
+
+            GemLoginReq request = GemLoginReq.Deserialize(body);
+
+            if (request.Token != null && request.ID != null)
+            {
+                Console.WriteLine($"Logging in with {request.Token} {request.ID}");
+                var LoginQuery = ServerHolder.DatabaseInstance.SelectFirst<ModelAccount>(ModelAccount.QueryLoginAccountByEmail, new
+                {
+                    Email = "rumblefighter187@outlook.com"
+                });
+
+                LoginRes response = new LoginRes();
+                response.Type = type;
+                response.Action = action;
+                response.UserID = LoginQuery.UUID;
+                response.IGN = LoginQuery.IGN;
+                response.Exp = LoginQuery.EXP;
+                response.Carats = LoginQuery.Carats;
+                response.Medals = LoginQuery.Medals;
+                response.GUID = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
+                response.Token = GenerateRandomString(30);
+                response.Region = "NA";
+                response.Country = "US";
+                response.ForumName = LoginQuery.ForumName;
+
+                Console.WriteLine($"Token: {response.Token}");
+
+                PlayerManager.Player player = new PlayerManager.Player
+                {
+
+                    UserID = response.UserID,
+                    UserIGN = response.IGN,
+                    Carats = response.Carats,
+                    EXP = response.Exp,
+                    Token = response.Token,
+                    ForumName = response.ForumName,
+                    // Region = response.Region,
+                    // Country = response.Country,
+                    GUID = response.GUID,
+                    CurrentAvatar = LoginQuery.CurrentAvatar,
+                    Stream = stream
+
+                };
+
+                _playerManager.TryAddPlayer(stream, player);
+
+                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+
+            }
+
+
 
 
         }
@@ -427,18 +496,47 @@ namespace Gemnet.PacketProcessors
                 new { PlayerID = player.UserID }
             );
 
-            foreach (var friendship in buddyListQuery)
+            var Buddies = new List<Buddy>(); // Moved outside so it's accessible throughout the method
+
+            if (buddyListQuery == null || buddyListQuery.Count() == 0 || !buddyListQuery.Any())
             {
-                int friendId = (friendship.RequesterUUID == player.UserID) ? friendship.ReceiverUUID : friendship.RequesterUUID;
-
-                var friendPlayer = _playerManager.GetPlayerById(friendId);
-
-                response.Buddies.Add(new Buddy
-                {
-                    UserID = friendId,
-                    UserIGN = friendPlayer?.UserIGN ?? "Unknown"
-                });
+                Console.WriteLine("Failed to get buddy list.");
             }
+            else
+            {
+                //Buddies.Add(new Buddy { UserID = 1337, UserIGN = "Welcome To Gemnet", StatusA = 0x4E, StatusB = 0x4F });
+
+                foreach (var friendship in buddyListQuery)
+                {
+                    int friendId = (friendship.RequesterUUID == player.UserID) ? friendship.ReceiverUUID : friendship.RequesterUUID;
+
+                    var friendPlayer = ServerHolder.DatabaseInstance.SelectFirst<ModelAccount>(ModelAccount.QuerySelectAccount, new
+                    {
+                        ID = friendId
+                    });
+
+                    Console.WriteLine($"Buddies: {friendPlayer.IGN}");
+
+                    bool isOnline = false;
+
+                    if (_playerManager.IsPlayerOnline(friendPlayer.IGN))
+                        isOnline = true;
+
+                    // if online is true then StatusB = 0x4F, else StatusB = 0x46
+                    byte value = (byte)(isOnline ? 0x4F : 0x46);
+
+                    Buddies.Add(new Buddy
+                    {
+                        UserID = friendId,
+                        UserIGN = friendPlayer?.IGN ?? "Unknown",
+                        StatusA = (byte)(friendship.Status == "Pending" ? 0x4E : 0x52),
+                        StatusB = value
+                    });
+
+                }
+                
+            }
+
 
 
             // Temporary hardcoded buddy list
@@ -447,53 +545,54 @@ namespace Gemnet.PacketProcessors
             // StatusA: 0x4E = Accepted, 0x52 = Pending. 
             // StatusB: 0x46 = Offline, 0x4F = Online.
 
-            var Buddies = new List<Buddy>
-            {
-                new Buddy { UserID = 999, UserIGN = "Nimonix", StatusA = 0x4E, StatusB = 0x4F },
-                new Buddy { UserID = 998, UserIGN = "Gemnet" , StatusA = 0x4E, StatusB = 0x46},
+            // var Buddies = new List<Buddy>
+            // {
+            //     new Buddy { UserID = 999, UserIGN = "Nimonix", StatusA = 0x4E, StatusB = 0x4F },
+            //     new Buddy { UserID = 998, UserIGN = "Gemnet" , StatusA = 0x4E, StatusB = 0x46},
 
-                new Buddy { UserID = 997, UserIGN = "Pending" , StatusA = 0x52, StatusB = 0x4F},
-                new Buddy { UserID = 996, UserIGN = "Online" , StatusA = 0x4E, StatusB = 0x4F},
-                new Buddy { UserID = 994, UserIGN = "Offline" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 997, UserIGN = "Pending" , StatusA = 0x52, StatusB = 0x4F},
+            //     new Buddy { UserID = 996, UserIGN = "Online" , StatusA = 0x4E, StatusB = 0x4F},
+            //     new Buddy { UserID = 994, UserIGN = "Offline" , StatusA = 0x52, StatusB = 0x46},
 
 
-                new Buddy { UserID = 1337, UserIGN = "BUDDY6" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY7" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY8" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY9" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY10" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY11" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY12" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY13" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY14" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY15" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY16" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY17" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY18" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY19" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY20" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY21" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY22" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY23" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY24" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY25" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY26" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY27" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY28" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY29" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY30" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY31" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY32" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY33" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY34" , StatusA = 0x52, StatusB = 0x46},
-                new Buddy { UserID = 1337, UserIGN = "BUDDY35" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY6" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY7" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY8" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY9" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY10" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY11" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY12" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY13" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY14" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY15" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY16" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY17" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY18" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY19" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY20" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY21" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY22" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY23" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY24" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY25" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY26" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY27" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY28" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY29" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY30" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY31" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY32" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY33" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY34" , StatusA = 0x52, StatusB = 0x46},
+            //     new Buddy { UserID = 1337, UserIGN = "BUDDY35" , StatusA = 0x52, StatusB = 0x46},
 
-            };
+            // };
+
 
             response.Buddies = Buddies;
 
-            // string hexOutput = string.Join(", ", response.Serialize().Select(b => $"0x{b:X2}"));
-            // Console.WriteLine($"Get Test Data Buddy List: {hexOutput}");
+            string hexOutput = string.Join(", ", response.Serialize().Select(b => $"0x{b:X2}"));
+            Console.WriteLine($"Get Test Data Buddy List: {hexOutput}");
 
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
@@ -523,22 +622,33 @@ namespace Gemnet.PacketProcessors
 
             }
 
-            var addBuddyQuery = ServerHolder.DatabaseInstance.Select<ModelFriends>(ModelFriends.QuerySendFriendRequest, new
+            try
             {
-                RequesterUUID = player.UserID,
-                ReceiverUUID = addingPlayer.UserID
-            });
+                var addBuddyQuery = ServerHolder.DatabaseInstance.Select<ModelFriends>(ModelFriends.QuerySendFriendRequest, new
+                {
+                    RequesterUUID = player.UserID,
+                    ReceiverUUID = addingPlayer.UserID
+                });
 
-            if (addBuddyQuery == null)
+                if (addBuddyQuery == null)
+                {
+                    Console.WriteLine("Failed to add buddy. Query returned null.");
+                    result = false;
+                }
+                else
+                {
+                    Console.WriteLine($"Buddy {request.UserIGN} added successfully.");
+                    result = true;
+                }
+            }
+            catch (Exception ex)
             {
-                Console.WriteLine("Failed to add buddy.");
+                Console.WriteLine("An error occurred while trying to add buddy:");
+                Console.WriteLine($"Exception Message: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 result = false;
             }
-            else
-            {
-                Console.WriteLine($"Buddy {request.UserIGN} added successfully.");
-                result = true;
-            }
+
 
             if (result)
             {
@@ -547,6 +657,7 @@ namespace Gemnet.PacketProcessors
             }
             else
             {
+                // FAIL
                 byte[] data = { 0x02, 0x10, 0x02, 0x08, 0xAB, 0x01, 0x00, 0x00, 0x41, 0x49, 0x4C, 0x28, 0x75, 0x6E, 0x6B, 0x6E, 0x6F, 0x77, 0x6E, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -676,6 +787,16 @@ namespace Gemnet.PacketProcessors
 
         }
 
+        public static void GemUnknown1(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+
+            byte[] data = { 0x00, 0x10, 0x00, 0x10, 0xC6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58 };
+
+            _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+
+
+        }
 
     }
 

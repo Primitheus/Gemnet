@@ -202,8 +202,18 @@ public class PlayerManager
 
         return finalItemIds;
     }
-    
-    
+
+    public List<Player> GetAllOnlinePlayers()
+    {
+        return _activePlayers.Values.ToList();
+
+    }
+
+    public bool IsPlayerOnline(string UserIGN)
+    {
+        return _activePlayers.Values.Any(player => player.UserIGN == UserIGN);    
+
+    }
 
 
 }

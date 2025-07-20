@@ -151,6 +151,45 @@ public class NoAvatarRes : HeaderPacket
     }
 
 
-
 }
 
+public class GemLoginReq : HeaderPacket
+{
+    public string Token { get; set; } // these two might be wrong order.
+    public string ID { get; set; } //
+
+    private struct PropertyOffsets
+    {
+        public static readonly int Token = 6;
+        public static readonly int ID = 107;
+
+    }
+
+    public new static GemLoginReq Deserialize(byte[] data)
+    {
+        GemLoginReq packet = new GemLoginReq();
+        int offset = 6;
+        int maxLen = 100;
+
+
+        int nullTerminator = 0;
+
+        packet.Type = ToUInt16BigEndian(data, 0);
+        packet.Size = ToUInt16BigEndian(data, 2);
+        packet.Action = BitConverter.ToUInt16(data, 4);
+
+        // Read Username
+        packet.Token = Encoding.ASCII.GetString(data, PropertyOffsets.Token, maxLen);
+        nullTerminator = packet.Token.IndexOf('\x00');
+        packet.Token = packet.Token.Remove(nullTerminator);
+
+        // Read Password
+        packet.ID = Encoding.ASCII.GetString(data, PropertyOffsets.ID, maxLen);
+        nullTerminator = packet.ID.IndexOf('\x00');
+        packet.ID = packet.ID.Remove(nullTerminator);
+
+        return packet;
+
+    }
+
+}

@@ -33,6 +33,7 @@ public class GameManager
         public string Password { get; set; } = string.Empty;
         public ushort RoomId { get; set; }
 
+        public int RMSlotID { get; set; }
         public int RMExp { get; set; }
         public string RMIGN { get; set; } = "DefaultIGN"; // Default value, can be changed
         public int RMP2PID { get; set; }
@@ -46,9 +47,15 @@ public class GameManager
         public byte MatchType { get; set; }
         public byte BattleType { get; set; }
         public byte RoundNumber { get; set; }
-        public int GameMode1 { get; set; }
-        public int GameMode2 { get; set; }
-        public int GameMode3 { get; set; }
+
+        public ushort GameMode1 { get; set; }
+        public ushort GameMode2 { get; set; }
+        public ushort GameMode3 { get; set; }
+
+        public ushort Map1 { get; set; }
+        public ushort Map2 { get; set; }
+        public ushort Map3 { get; set; }
+
         public string Country { get; set; }
         public string Region { get; set; }
 
@@ -68,9 +75,9 @@ public class GameManager
         byte matchType,
         byte battleType,
         byte roundNumber,
-        int gm1,
-        int gm2,
-        int gm3)
+        ushort gm1,
+        ushort gm2,
+        ushort gm3)
 
     {
 
@@ -84,12 +91,15 @@ public class GameManager
 
         ushort roomId = (ushort)Interlocked.Increment(ref _nextRoomId);
 
+        creator.SlotID = 7;
+
         var room = new GameRoom
         {
 
             //Password = password,
 
             RoomId = roomId,
+            RMSlotID = creator.SlotID,
             RMExp = creator.EXP,
             RMIGN = creator.UserIGN,
             RMP2PID = playerP2pId,
@@ -126,7 +136,6 @@ public class GameManager
 
         Console.WriteLine($"Room Created: {roomId} by {creator.UserIGN} (P2PID: {playerP2pId}) Successfully");
         creator.P2PID = playerP2pId;
-        creator.SlotID = 7;
         creator.CurrentRoom = room.RoomId;
 
 
@@ -154,6 +163,8 @@ public class GameManager
         }
         return null; // or throw an exception if preferred
     }
+
+
 
     public GameRoom GetRoom(string groupP2pId)
     {
@@ -215,6 +226,7 @@ public class GameManager
                 player.SlotID = slotId;
                 player.CurrentRoom = roomId;
                 player.Ready = false;
+                player.Team = 0;
 
 
                 Console.WriteLine($"Player {player.UserIGN} joined Room {roomId} with SlotID {slotId}");
@@ -244,10 +256,6 @@ public class GameManager
         {
             if (room.Players.TryRemove(player.UserID, out _))
             {
-                if (player.SlotID != 7) // Don't recycle master slot
-                {
-                    room.AvailableSlots.Add(player.SlotID);
-                }
 
                 // Clear player state
                 player.CurrentRoom = 0;
@@ -260,6 +268,12 @@ public class GameManager
                 {
                     _gameRooms.TryRemove(roomId, out _);
                     Console.WriteLine($"Room {roomId} has been removed as it is now empty.");
+                }
+                else
+                {
+                    Console.WriteLine($"Player {player.UserIGN} left Room {roomId} with {room.Players.Count} players remaining.");
+
+
                 }
 
                 return true;
@@ -282,17 +296,16 @@ public class GameManager
         if (room.Players.IsEmpty)
             return null;
 
-
-
         //var newMaster = room.Players.Values.FirstOrDefault();
-        // new master should not have slotid 7.
+        var newMaster = room.Players.Values.FirstOrDefault(p => p.SlotID != room.RMSlotID);
 
-        var newMaster = room.Players.Values.FirstOrDefault(p => p.SlotID != 7);
+        if (newMaster == null)
+        {
+            return null;
+        }
 
-        ushort oldSlotId = newMaster.SlotID;
+        room.RMSlotID = newMaster.SlotID;
 
-        room.AvailableSlots.Add(oldSlotId);
-        newMaster.SlotID = 7;
 
         return newMaster;
 

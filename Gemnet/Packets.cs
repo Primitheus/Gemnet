@@ -22,7 +22,7 @@ namespace Gemnet.Packets.Enums
             UNKNOWN_4 = 0x1f,
         }
 
-        public enum Guild
+        public enum ActionGuild
         {
             UNKNOWN_A = 0x80,
             GET_GUILD_MARK = 0x82,
@@ -96,7 +96,9 @@ namespace Gemnet.Packets.Enums
             UNKNOWN_S = 0x8b,
             UNKNOWN_T = 0xb4,
             UNKNOWN_U = 0x44,
-            
+
+            GEM_LOGIN = 0xba,
+            GEM_UNKNOWN_1 = 0xc5,
         }
 
         public enum ActionGG
@@ -105,7 +107,7 @@ namespace Gemnet.Packets.Enums
             GAMEGUARD_START = 0x80,
             ANHS_RESPONSE = 0x82,
         }
-        
+
         public enum ActionGeneral
         {
             // GENERAL (0x30)
@@ -134,11 +136,19 @@ namespace Gemnet.Packets.Enums
             BUFF_UNUSABLE = 0xc2,
             RUNE_USE_CHECK = 0xc0,
             UNKNOWN_A = 0xc6,
-            SET_INTRODUCTION = 0xb8, 
+            SET_INTRODUCTION = 0xb8,
             IS_VALID_USER = 0x94,
             GET_USER_INFO_RENEWAL = 0xb6,
             START_USE_ITEM = 0x8e,
             UNKNOWN_F = 0xca,
+
+            GEM_UNKNOWN_A = 0xa4,
+
+            GEM_UNKNOWN_1 = 0xac,
+            GEM_UNKNOWN_2 = 0xae,
+            GEM_UNKNOWN_3 = 0xb0,
+
+
 
         }
 

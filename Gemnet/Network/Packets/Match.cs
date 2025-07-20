@@ -23,7 +23,7 @@ namespace Gemnet.Network.Packets
             packet.Size = ToUInt16BigEndian(data, 2);
             packet.Action = BitConverter.ToUInt16(data, 4);
 
-            packet.UserIGN = Encoding.ASCII.GetString(data, offset, 32);
+            packet.UserIGN = Encoding.ASCII.GetString(data, offset, 20);
             nullTerminator = packet.UserIGN.IndexOf('\x00');
             packet.UserIGN = packet.UserIGN.Remove(nullTerminator);
 

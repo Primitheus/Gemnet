@@ -13,6 +13,8 @@ namespace Gemnet.PacketProcessors.Extra
 {
     public class Util
     {
+        private static PlayerManager _playerManager = ServerHolder._playerManager;
+        private static GameManager _gameManager = ServerHolder._gameManager;
 
         public static void Announce(string Message)
         {
@@ -31,5 +33,35 @@ namespace Gemnet.PacketProcessors.Extra
 
         }
 
+        public static void UserUpdateRoom(string UserIGN, NetworkStream stream)
+        {
+
+            var player = _playerManager.GetPlayerByIGN(UserIGN);
+
+
+            UpdateRoomMasterRes response = new UpdateRoomMasterRes();
+            response.Type = 576;
+            response.Action = 0x17;
+            response.NewRoomMaster = player.UserIGN;
+            response.Unknown1 = 1;
+
+            var player2 = _playerManager.GetPlayerByStream(stream);
+
+
+            UpdateRoomMasterRes response2 = new UpdateRoomMasterRes();
+            response2.Type = 576;
+            response2.Action = 0x17;
+            response2.NewRoomMaster = player2.UserIGN;
+            response2.Unknown1 = 0;
+
+            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream, false);
+            _ = ServerHolder.ServerInstance.SendPacket(response2.Serialize(), stream, false);
+
+
+        }
+
+
     }
+
+
 }
