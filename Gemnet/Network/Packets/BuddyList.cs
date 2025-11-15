@@ -158,6 +158,54 @@ namespace Gemnet.Network.Packets
         }
     }
 
+    public class AgreeBuddyReq : HeaderPacket
+    {
+        public int UserID { get; set; }
+        private struct PropertyOffsets
+        {
+            public static readonly int UserID = 6; 
+        
+        }
+        public new static AgreeBuddyReq Deserialize(byte[] data)
+        {
+            AgreeBuddyReq packet = new AgreeBuddyReq();
+        
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+            
+            packet.UserID = BitConverter.ToInt32(data, PropertyOffsets.UserID);
+            
+            return packet;
+        }     
+        
+    }
+    
+    public class DeleteBuddyReq : HeaderPacket
+    {
+        public int UserID { get; set; }
+        private struct PropertyOffsets
+        {
+            public static readonly int UserID = 6; 
+        
+        }
+        public new static DeleteBuddyReq Deserialize(byte[] data)
+        {
+            DeleteBuddyReq packet = new DeleteBuddyReq();
+        
+
+            packet.Type = ToUInt16BigEndian(data, 0);
+            packet.Size = ToUInt16BigEndian(data, 2);
+            packet.Action = BitConverter.ToUInt16(data, 4);
+            
+            packet.UserID = BitConverter.ToInt32(data, PropertyOffsets.UserID);
+            
+            return packet;
+        }     
+        
+    }
+
     public class AddBuddyRes : HeaderPacket
     {
         public int UserID { get; set; }

@@ -62,6 +62,10 @@ public class GameManager
         public ConcurrentDictionary<int, PlayerManager.Player> Players { get; } = new();
         //public ConcurrentDictionary<int, PlayerManager.Player> Spectators { get; } = new();  
 
+        public List<PlayerStats> MatchRewards { get; set; } = new();
+        public ManualResetEventSlim RewardsReady = new ManualResetEventSlim(false);
+
+
 
     }
 
@@ -81,7 +85,7 @@ public class GameManager
 
     {
 
-        
+
         var creator = _playerManager.GetPlayerByStream(creatorStream);
 
         if (creator == null)
@@ -114,7 +118,7 @@ public class GameManager
             GameMode3 = gm3,
             Country = "US",
             Region = "NA"
-            
+
         };
 
         for (ushort i = 0; i < 7; i++)
@@ -164,6 +168,24 @@ public class GameManager
         return null; // or throw an exception if preferred
     }
 
+    public List<PlayerStats> SaveMatchRewards(ushort roomId, List<PlayerStats> rewards)
+    {
+        if (_gameRooms.TryGetValue(roomId, out var room))
+        {
+            room.MatchRewards = rewards;
+            return room.MatchRewards;
+        }
+        return null; // or throw an exception if preferred
+    }
+
+    public List<PlayerStats> GetMatchRewards(ushort roomId)
+    {
+        if (_gameRooms.TryGetValue(roomId, out var room))
+        {
+            return room.MatchRewards;
+        }
+        return null; // or throw an exception if preferred
+    }
 
 
     public GameRoom GetRoom(string groupP2pId)

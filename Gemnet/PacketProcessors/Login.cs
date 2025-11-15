@@ -5,8 +5,8 @@ using Gemnet.Packets.Login;
 using Gemnet.Persistence.Models;
 using System.Net.Sockets;
 using Org.BouncyCastle.Asn1.Ocsp;
-using static Program;
-using static Server;
+using static Gemnet.Program;
+using static Gemnet.Server;
 using System.Text;
 using BCrypt.Net;
 using Org.BouncyCastle.Asn1.Misc;
@@ -49,12 +49,7 @@ namespace Gemnet.PacketProcessors
             string hexOutput = string.Join(", ", body.Select(b => $"0x{b:X2}"));
             Console.WriteLine($"TEST: {hexOutput}");
 
-
-
             LoginReq request = LoginReq.Deserialize(body);
-
-
-
 
             Console.WriteLine($"Request: {request.Email}");
             //string hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -168,6 +163,42 @@ namespace Gemnet.PacketProcessors
 
                     Console.WriteLine($"Token: {response.Token}");
 
+                    if (LoginQuery.CurrentAvatar == 0)
+                    {
+                        
+                        Console.WriteLine($"No avatar equipped, equipping first avatar. searching for avatars for user {LoginQuery.UUID}");
+
+                        var firstAvatarQuery = ServerHolder.DatabaseInstance.SelectFirst<ModelAvatar>(ModelAvatar.QueryGetDefaultAvatar, new
+                        {
+                            ID = LoginQuery.UUID
+                        });
+
+                        if (firstAvatarQuery == null)
+                        {
+                            //SendToAccountCreation(stream, LoginQuery.UUID);
+                            Console.WriteLine("User has no avatars, cannot log in.");
+
+                            return;
+                        }
+                        else
+                        {
+                            // var updateState = ServerHolder.DatabaseInstance.Execute(ModelAccount.QueryUpdateState, new
+                            // {
+                            //     state = (int)AccountState.Active,
+                            //     ID = LoginQuery.UUID
+                            // });
+
+                            var updateAvatar = ServerHolder.DatabaseInstance.Execute(ModelAccount.QueryUpdateAvatar, new
+                            {
+                                avatar = firstAvatarQuery.AvatarID,
+                                ID = LoginQuery.UUID
+                            });
+
+                            LoginQuery.CurrentAvatar = firstAvatarQuery.AvatarID;
+                        }
+
+                    }
+
                     PlayerManager.Player player = new PlayerManager.Player
                     {
 
@@ -187,7 +218,7 @@ namespace Gemnet.PacketProcessors
 
                     _playerManager.TryAddPlayer(stream, player);
 
-                    _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+                    _ = ServerHolder.ServerInstance.SendPacketAsync(response.Serialize(), stream);
                 }
             }
 
@@ -344,6 +375,14 @@ namespace Gemnet.PacketProcessors
                 END = 1000
             });
 
+            // 5135224 -> Fishing Rod
+            ServerHolder.DatabaseInstance.Execute(ModelInventory.InsertItem, new
+            {
+                OID = player.UserID,
+                ID = 5135224,
+                END = 1000
+            });
+
             ServerHolder.DatabaseInstance.Execute(ModelInventory.InsertItem, new
             {
                 OID = player.UserID,
@@ -391,6 +430,20 @@ namespace Gemnet.PacketProcessors
                 });
             }
 
+            // Get First Avatar ID
+            var firstAvatarQuery = ServerHolder.DatabaseInstance.SelectFirst<ModelAvatar>(ModelAvatar.QueryGetAvatarIDs, new
+            {
+                ID = player.UserID
+            });
+
+            var Query = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryUpdateAvatar, new
+            {
+                avatar = firstAvatarQuery.AvatarID,
+                ID = player.UserID
+            });
+
+
+
             Console.WriteLine($"Avatars inserted successfully.");
 
 
@@ -425,7 +478,7 @@ namespace Gemnet.PacketProcessors
             player.Region = response.Region;
             player.Country = response.Country;
             player.GUID = response.GUID;
-            player.CurrentAvatar = LoginQuery.CurrentAvatar;
+            player.CurrentAvatar = firstAvatarQuery.AvatarID;
 
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
@@ -652,8 +705,25 @@ namespace Gemnet.PacketProcessors
 
             if (result)
             {
-                // ON Success, send a response packet
-                _ = ServerHolder.ServerInstance.SendPacket(type, 0x6, action, stream);
+                // ON Success, send a response packet and send 
+                _ = ServerHolder.ServerInstance.SendPacket(528, 0x6, action, stream);
+
+                // also send to the friend a notification that they have been added
+                AddBuddyRes notRequest = new AddBuddyRes();
+
+                notRequest.Type = 528;
+                notRequest.Action = (ushort)Packets.Enums.Packets.ActionLogin.S2C_FRIEND_REQ_RECIEVE;
+                notRequest.UserID = player.UserID;
+                notRequest.UserIGN = player.UserIGN;
+
+                var onlinePlayer = _playerManager.GetPlayerById(addingPlayer.UserID);
+                
+                if (onlinePlayer.Stream != null)
+                {
+                    _ = ServerHolder.ServerInstance.SendNotificationPacket(notRequest.Serialize(),  onlinePlayer.Stream);
+
+                }
+                
             }
             else
             {
@@ -680,6 +750,79 @@ namespace Gemnet.PacketProcessors
                 _ = ServerHolder.ServerInstance.SendPacket(data, stream);
 
             }
+            
+        }
+
+        public static void AGREE_BUDDY(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+            var player = _playerManager.GetPlayerByStream(stream);
+            
+            AgreeBuddyReq request = AgreeBuddyReq.Deserialize(body);
+            
+            var query = ServerHolder.DatabaseInstance.Select<ModelFriends>(ModelFriends.QueryAcceptFriendRequest, new
+            {
+                RequesterUUID = request.UserID,
+                ReceiverUUID = player.UserID
+            });
+            
+            if (query == null)
+            {
+                // Fail
+                Console.WriteLine("Failed to add buddy. Query returned null.");
+            }
+            else
+            {
+                
+                // Success
+                byte[] data = { 0x02, 0x10, 0x00, 0x06, 0xAD, 0x00 };
+                _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+                
+                AddBuddyRes notify = new AddBuddyRes();
+
+                notify.Type = 528;
+                notify.Action = (ushort)Packets.Enums.Packets.ActionLogin.S2C_FRIEND_ACCEPTED;
+                notify.UserID = player.UserID;
+                notify.UserIGN = player.UserIGN;
+
+                var onlinePlayer = _playerManager.GetPlayerById(request.UserID);
+                
+                if (onlinePlayer.Stream != null)
+                {
+                    _ = ServerHolder.ServerInstance.SendNotificationPacket(notify.Serialize(),  onlinePlayer.Stream);
+
+                }
+
+            }
+            
+
+        }
+
+        public static void DELETE_BUDDY(ushort type, ushort action, byte[] body, NetworkStream stream)
+        {
+            action++;
+            DeleteBuddyReq request = DeleteBuddyReq.Deserialize(body);
+            var player = _playerManager.GetPlayerByStream(stream);
+            
+            var query = ServerHolder.DatabaseInstance.Select<ModelFriends>(ModelFriends.QueryDeleteFriend, new
+            {
+                RequesterUUID = player.UserID,
+                ReceiverUUID = request.UserID
+            });
+
+            if (query == null)
+            {
+                Console.WriteLine("Failed to delete buddy. Query returned null.");
+            }
+            else
+            {
+                // Successfully Deleted
+                byte[] data = { 0x00, 0x10, 0x00, 0x06, 0xAF, 0x00 };
+                _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+                
+                
+            }
+            
 
 
 

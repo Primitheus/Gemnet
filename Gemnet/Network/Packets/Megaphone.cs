@@ -36,8 +36,9 @@ namespace Gemnet.Network.Packets
             packet.Unknown2 = Convert.ToInt32(data[PropertyOffsets.Unknown2]);
 
             packet.Message = Encoding.ASCII.GetString(data, PropertyOffsets.Message, 44);
-            nullTerminator = packet.Message.IndexOf('\x00');
-            packet.Message = packet.Message.Remove(nullTerminator);
+            nullTerminator = packet.Message.IndexOf('\0');
+            packet.Message = nullTerminator >= 0 ? packet.Message.Substring(0, nullTerminator) : packet.Message;
+
             
 
             return packet;

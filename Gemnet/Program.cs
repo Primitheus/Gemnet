@@ -2,21 +2,21 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using SendPacket;
 using Gemnet;
 using Gemnet.Packets;
-using System.Runtime;
-using Microsoft.VisualBasic;
 using Gemnet.Settings;
 using Gemnet.Persistence;
 using Gemnet.Persistence.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using System.Threading;
 
+namespace Gemnet
+{
     internal class Program
     {
-
-        private static DateTime m_lastTickUpdate = DateTime.MinValue;
-        private static Settings.SData m_settings = null;
-
         public static class ServerHolder
         {
             public static Server ServerInstance { get; set; }
@@ -25,48 +25,127 @@ using Gemnet.Persistence.Models;
             public static GameManager _gameManager { get; set; }
         }
 
-
         public static async Task Main(string[] args)
         {
-
-            Console.WriteLine("Importing settings from 'settings.json'...");
-            m_settings = Settings.ImportSettings("./settings.json");
-
-            if (m_settings == null)
+            // Create host builder with dependency injection
+            var host = CreateHostBuilder(args).Build();
+            
+            try
             {
-                Console.WriteLine("Could not import settings.");
-                return;
+                await host.RunAsync();
             }
-
-            Console.WriteLine("Connecting to database...");
-            Database.ConnectionString = m_settings.DBConnectionString;
-
-            var database = new Database();
-            database.Connect();
-
-            if (!database.IsConnected())
+            catch (Exception ex)
             {
-                Console.WriteLine("Could not connect to the database.");
-                return;
+                var logger = host.Services.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "Application terminated unexpectedly");
             }
+        }
 
-            DBGeneral.CheckAndCreateDatabase(database);
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureServices((hostContext, services) =>
+                {
+                    // Configure logging
+                    services.AddLogging(builder =>
+                    {
+                        builder.AddConsole();
+                        builder.AddDebug();
+                        builder.SetMinimumLevel(LogLevel.Information);
+                    });
 
+                    // Configure settings
+                    var settings = Settings.Settings.ImportSettings("./settings.json");
+                    if (settings == null)
+                    {
+                        throw new InvalidOperationException("Could not import settings from 'settings.json'");
+                    }
+                    services.AddSingleton(settings);
 
-            Server server = new Server(IPAddress.Loopback, m_settings.Port);
+                    // Configure database
+                    Database.ConnectionString = settings.DBConnectionString;
+                    var database = new Database();
+                    database.Connect();
 
-            ServerHolder.ServerInstance = server;
-            ServerHolder.DatabaseInstance = database;
+                    if (!database.IsConnected())
+                    {
+                        throw new InvalidOperationException("Could not connect to the database");
+                    }
 
-            Console.WriteLine("Initializing managers...");
-            ServerHolder._playerManager = new PlayerManager(ServerHolder.DatabaseInstance);
-            ServerHolder._gameManager = new GameManager(ServerHolder._playerManager);
+                    DBGeneral.CheckAndCreateDatabase(database);
+                    services.AddSingleton(database);
 
+                    // Configure managers
+                    var playerManager = new PlayerManager(database);
+                    var gameManager = new GameManager(playerManager);
+                    
+                    services.AddSingleton(playerManager);
+                    services.AddSingleton(gameManager);
 
-            await server.Start();
+                    // Configure server
+                    services.AddSingleton<Server>();
 
-
+                    // Store references for backward compatibility
+                    ServerHolder.DatabaseInstance = database;
+                    ServerHolder._playerManager = playerManager;
+                    ServerHolder._gameManager = gameManager;
+                })
+                .ConfigureAppConfiguration((hostContext, config) =>
+                {
+                    config.AddJsonFile("settings.json", optional: false);
+                })
+                .UseConsoleLifetime()
+                .ConfigureServices((hostContext, services) =>
+                {
+                    services.AddHostedService<ServerHostedService>();
+                });
     }
+
+    public class ServerHostedService : IHostedService
+    {
+        private readonly ILogger<ServerHostedService> _logger;
+        private readonly Server _server;
+        private readonly Settings.Settings.SData _settings;
+
+        public ServerHostedService(
+            ILogger<ServerHostedService> logger,
+            Server server,
+            Settings.Settings.SData settings)
+        {
+            _logger = logger;
+            _server = server;
+            _settings = settings;
+        }
+
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Starting Gemnet server...");
+            
+            try
+            {
+                // Store server reference for backward compatibility
+                Program.ServerHolder.ServerInstance = _server;
+                
+                await _server.StartAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to start server");
+                throw;
+            }
+        }
+
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Stopping Gemnet server...");
+            
+            try
+            {
+                await _server.StopAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error stopping server");
+            }
+        }
     }
-
-
+}

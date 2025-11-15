@@ -5,7 +5,7 @@ using Gemnet.Persistence.Models;
 using GemnetCS.Network.Packets;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Crypto.Fpe;
-using static Program;
+using static Gemnet.Program;
 
 
 namespace Gemnet.PacketProcessors

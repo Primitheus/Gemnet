@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Gemnet.Network.Packets;
 using static Gemnet.AvatarDef.Enums.AvatarDef;
-using static Program;
+using static Gemnet.Program;
 using Newtonsoft.Json;
 using System.Globalization;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -15,6 +15,9 @@ using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Asn1.Cmp;
 using Microsoft.VisualBasic;
 using Gemnet.PacketProcessors.Extra;
+using Gemnet.Network.Packets.Helpers;
+using System.Text.RegularExpressions;
+using System.Net.Quic;
 
 namespace Gemnet.PacketProcessors
 {
@@ -220,13 +223,14 @@ namespace Gemnet.PacketProcessors
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
 
             ////////////////////////////////////////////////////////////////////////////////////////////
-
-            UserUpdateRoom(stream, request.RoomID);
+            var player = _playerManager.GetPlayerByStream(stream);
+            UserUpdateRoom(player, request.RoomID);
 
             var result = _gameManager.LeaveRoom(stream, request.RoomID);
             if (result)
             {
                 Console.WriteLine($"Successfully left room {request.RoomID}");
+
             }
             else
             {
@@ -239,7 +243,7 @@ namespace Gemnet.PacketProcessors
 
         }
 
-        public static void UserUpdateRoom(NetworkStream stream, ushort RoomID)
+        public static void UserUpdateRoom(PlayerManager.Player player, ushort RoomID)
         {
 
             Console.WriteLine($"User Update Room for Room ID: {RoomID}");
@@ -249,7 +253,6 @@ namespace Gemnet.PacketProcessors
             response.Type = 576;
             response.Action = 0x11;
 
-            var player = _playerManager.GetPlayerByStream(stream);
             var playersInRoom = _gameManager.GetPlayersInRoom(RoomID);
 
             var room = _gameManager.GetRoom(RoomID);
@@ -272,7 +275,7 @@ namespace Gemnet.PacketProcessors
                     response2.NewRoomMaster = newMaster.UserIGN;
                     response2.Unknown1 = 1;
 
-                    _ = ServerHolder.ServerInstance.SendToRoomExcludeSender(response2.Serialize(), RoomID, stream);
+                    _ = ServerHolder.ServerInstance.SendToRoom(response2.Serialize(), RoomID);
 
                 }
 
@@ -281,61 +284,9 @@ namespace Gemnet.PacketProcessors
 
             Console.WriteLine($"Player Who Left: {response.PlayerWhoLeft}");
 
-            _ = ServerHolder.ServerInstance.SendToRoomExcludeSender(response.Serialize(), RoomID, stream);
-
-
+            _ = ServerHolder.ServerInstance.SendToRoom(response.Serialize(), RoomID);
 
         }
-
-        public class RoomInfo
-        {
-            public int unknownValue1 { get; set; }
-            public int unknownValue2 { get; set; }
-            public int unknownValue3 { get; set; }
-            public int unknownValue4 { get; set; }
-            public string RoomMasterIGN { get; set; }
-            public int P2PID { get; set; }
-            public string SomeID { get; set; }
-            public string RoomName { get; set; }
-            public int unknownValue6 { get; set; }
-            public int MaxPlayers { get; set; }
-            public int PlayerNumber { get; set; }
-            public int GameState { get; set; }
-            public int unknownValue7 { get; set; }
-            public int MatchType { get; set; }
-            public int unknownValue8 { get; set; }
-            public int unknownValue9 { get; set; }
-            public int unknownValue10 { get; set; }
-            public int RoundNumber { get; set; }
-            public int GameMode1 { get; set; }
-            public int GameMode2 { get; set; }
-            public int GameMode3 { get; set; }
-            public byte[] Time { get; set; }
-            public string Country { get; set; }
-            public string Region { get; set; }
-        }
-
-        public class PlayerInfo
-        {
-            public int unknownValue1 { get; set; }
-            public int unknownValue2 { get; set; }
-            public int EXP { get; set; }
-            public string IGN { get; set; }
-            public int P2PID { get; set; }
-            public string SomeID { get; set; }
-            public int[] ItemID { get; set; }
-            public int unknownValue4 { get; set; }
-            public int unknownValue5 { get; set; }
-            public int unknownValue6 { get; set; }
-            public int unknownValue7 { get; set; }
-            public int unknownValue8 { get; set; }
-            public int unknownValue9 { get; set; }
-            public int unknownValue10 { get; set; }
-            public string Country { get; set; }
-            public string Region { get; set; }
-
-        }
-
 
         public static void GetRoomList(ushort type, ushort action, byte[] body, NetworkStream stream)
         {
@@ -378,9 +329,6 @@ namespace Gemnet.PacketProcessors
                     - Arena: 
 
                 */
-
-                string jsonFilePath = "rooms.json";
-                string jsonData = File.ReadAllText(jsonFilePath);
 
                 var rooms = _gameManager.GetAllRooms();
 
@@ -467,32 +415,12 @@ namespace Gemnet.PacketProcessors
             response.GameMode2 = room.GameMode2;
             response.GameMode3 = room.GameMode3;
 
-
+            response.Map1 = room.Map1;
+            response.Map2 = room.Map2;
+            response.Map3 = room.Map3;
 
             response.Country = "US";
             response.Region = "NA";
-
-
-
-            ChangeMapRes response_maps = new ChangeMapRes();
-
-            response_maps.Action = 0x20;
-            response_maps.Type = 576;
-
-            response_maps.unknownValue1 = 1;
-            response_maps.unknownValue2 = 1;
-            response_maps.unknownValue3 = 1;
-
-            response_maps.RoundNumber = room.RoundNumber;
-            response_maps.GameMode1 = room.GameMode1;
-            response_maps.GameMode2 = room.GameMode2;
-            response_maps.GameMode3 = room.GameMode3;
-
-            response_maps.Map1 = room.Map1;
-            response_maps.Map2 = room.Map2;
-            response_maps.Map3 = room.Map3;
-
-            _ = ServerHolder.ServerInstance.SendPacket(response_maps.Serialize(), stream);
 
 
             // string hexOutput = string.Join(", ", response.Serialize().Select(b => $"0x{b:X2}"));
@@ -749,6 +677,23 @@ namespace Gemnet.PacketProcessors
                 }
             }
 
+            if (request.Message.StartsWith("/ff", StringComparison.OrdinalIgnoreCase))
+            {
+
+                var room = _gameManager.GetRoom(player.CurrentRoom);
+                if (room != null && player.SlotID == room.RMSlotID)
+                {
+                    //room.GameState = 1; // Change game state to 'in-game'
+                    Console.WriteLine($"Force Quit");
+
+                    
+                    byte[] data = { 0x02, 0x40, 0x00, 0x06, 0xAB, 0x00 };
+                    _ = ServerHolder.ServerInstance.SendToRoom(data, room.RoomId);
+
+                }
+
+            }
+
             response.UserIGN = player.UserIGN;
 
             _ = ServerHolder.ServerInstance.SendToRoom(response.Serialize(), player.CurrentRoom);
@@ -791,22 +736,182 @@ namespace Gemnet.PacketProcessors
 
             MatchRewardReq request = MatchRewardReq.Deserialize(body);
 
-            Console.WriteLine($"Match Reward for {request.MatchID}.");
+            Console.WriteLine($"Match Reward for match: {request.MatchID}.");
+
+            var playerA = _playerManager.GetPlayerByStream(stream);
+            var room = _gameManager.GetRoom(playerA.CurrentRoom);
 
             MatchRewardRes response = new MatchRewardRes();
             response.Type = type;
             response.Action = action;
 
-            response.Players = request.Players;
-
-
-            foreach (var player in request.Players)
+            // If the Sender is Room Master.
+            if (playerA.UserIGN == room.RMIGN)
             {
-                Console.WriteLine($"Player: {player.PlayerIGN}, Kills: {player.Kills}, Deaths: {player.Deaths}, EXP: {player.EXP}, Carats: {player.Carats}, Additional Stats: {player.AdditionalStats}");
+
+                response.Players = request.Players;
+                response.Players = MatchResult.CalculateLeaderboardPositions(response.Players);
+
+                _gameManager.SaveMatchRewards(room.RoomId, response.Players);
+                room.RewardsReady.Set();
+
+                _ = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryAddCarats, new
+                {
+                    amount = response.Players.First(p => p.PlayerIGN == playerA.UserIGN).Carats,
+                    ID = playerA.UserID
+                });
+
+                _ = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryAddEXP, new
+                {
+                    amount = response.Players.First(p => p.PlayerIGN == playerA.UserIGN).EXP,
+                    ID = playerA.UserID
+                });
+
+                var query = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryGetPlayerInfo, new
+                {
+                    username = playerA.UserIGN
+                });
+
+                response.NewCarats = query.FirstOrDefault()?.Carats ?? 0;
+                response.NewExp =  query.FirstOrDefault()?.EXP ?? 0;
+
+                // response.NewCarats = response.Players.First(p => p.PlayerIGN == playerA.UserIGN).Carats + _playerManager.GetCarats(playerA.UserID);
+                // response.NewExp = response.Players.First(p => p.PlayerIGN == playerA.UserIGN).EXP + _playerManager.GetEXP(playerA.UserID);
+
+                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+
+                // foreach (var player in request.Players)
+                // {
+                //     Console.WriteLine($"Player: {player.PlayerIGN}, Kills: {player.Kills}, Deaths: {player.Deaths}, EXP: {player.EXP}, Carats: {player.Carats}, Additional Stats: {player.Stats.Serialize()}");
+                // }
+
+
             }
+            else
+            {
+                room.RewardsReady.Wait();
+
+                response.Players = _gameManager.GetMatchRewards(room.RoomId);
+
+                _ = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryAddCarats, new
+                {
+                    amount = response.Players.First(p => p.PlayerIGN == playerA.UserIGN).Carats,
+                    ID = playerA.UserID
+                });
+
+                _ = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryAddEXP, new
+                {
+                    amount = response.Players.First(p => p.PlayerIGN == playerA.UserIGN).EXP,
+                    ID = playerA.UserID
+                });
+
+                var query = ServerHolder.DatabaseInstance.Select<ModelAccount>(ModelAccount.QueryGetPlayerInfo, new
+                {
+                    username = playerA.UserIGN
+                });
 
 
-            _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+                response.NewCarats = query.FirstOrDefault()?.Carats ?? 0;
+                response.NewExp =  query.FirstOrDefault()?.EXP ?? 0;
+
+                _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
+
+            }
+            
+            // byte[] data = {
+            //     // Offset 0x00000000 to 0x00000416
+            //     0x00, 0x40, 0x04, 0x17, 0x2A, 0x00, 0x64, 0x14, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x12, 0x72, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x53, 0x65, 0x69,
+            //     0x6A, 0x75, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
+            //     0x00, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4E, 0x4E, 0x4E, 0x4E,
+            //     0x4E, 0x4E, 0x4E, 0x4E, 0x4E, 0x4E, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07,
+            //     0x00, 0x50, 0x72, 0x69, 0x6D, 0x69, 0x74, 0x68, 0x65, 0x75, 0x73, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x02, 0x00, 0x01, 0x00, 0x6F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x4E, 0x4E, 0x4E, 0x4E, 0x4E, 0x4E, 0x4E, 0x4E, 0x4E, 0x4E, 0x28, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6F, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x53, 0x54, 0x44, 0x2C, 0x39, 0x32, 0x2C, 0x52, 0x55, 0x4E, 0x2C,
+            //     0x31, 0x30, 0x31, 0x2C, 0x41, 0x54, 0x4B, 0x2C, 0x31, 0x30, 0x32, 0x2C,
+            //     0x44, 0x4D, 0x47, 0x2C, 0x31, 0x39, 0x2C, 0x47, 0x44, 0x2C, 0x30, 0x2C,
+            //     0x54, 0x46, 0x2C, 0x30, 0x2C, 0x53, 0x4B, 0x4C, 0x2C, 0x30, 0x2C, 0x4A,
+            //     0x4D, 0x50, 0x2C, 0x31, 0x39, 0x31, 0x2C, 0x45, 0x41, 0x54, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            //     0x00, 0x00, 0x00
+            // };
+
+                // _ = ServerHolder.ServerInstance.SendPacket(data, stream);
+
 
         }
 
@@ -851,7 +956,7 @@ namespace Gemnet.PacketProcessors
             var player = _playerManager.GetPlayerByStream(stream);
             var room = _gameManager.GetRoom(player.CurrentRoom);
 
-            room.GameState = 0x50;
+            room.GameState = (byte)GameState.InProgress;
 
             Console.WriteLine("Start Match");
             StartMatchReq request = StartMatchReq.Deserialize(body);
@@ -893,14 +998,6 @@ namespace Gemnet.PacketProcessors
 
             Console.WriteLine("Loading 1");
 
-            if (player.SlotID != 7)
-            {
-                Task.Delay(5000);
-
-            }
-
-
-            bool NOT = false;
             _ = ServerHolder.ServerInstance.SendToRoom(response.Serialize(), player.CurrentRoom);
 
         }
@@ -913,7 +1010,6 @@ namespace Gemnet.PacketProcessors
             var player = _playerManager.GetPlayerByStream(stream);
 
             Console.WriteLine("Loading 2");
-            //Task.Delay(10000);
             _ = ServerHolder.ServerInstance.SendPacket(data, stream);
 
         }
@@ -934,8 +1030,8 @@ namespace Gemnet.PacketProcessors
             response.Type = 576;
 
             response.unknownValue1 = request.unknownValue1;
-            response.unknownValue2 = request.unknownValue2;
-            response.unknownValue3 = request.unknownValue3;
+            response.ItemToggle = request.ItemToggle;
+            response.BattleType = request.BattleType;
 
             response.RoundNumber = request.RoundNumber;
             response.GameMode1 = request.GameMode1;
@@ -964,14 +1060,14 @@ namespace Gemnet.PacketProcessors
         {
             action++;
 
-            byte[] data = { 0x02, 0x40, 0x00, 0x06, 0xAB, 0x00 };
 
             var player = _playerManager.GetPlayerByStream(stream);
             player.Ready = false;
 
             var room = _gameManager.GetRoom(player.CurrentRoom);
-            room.GameState = 0x57;
+            room.GameState = (byte)GameState.Waiting;
 
+            byte[] data = { 0x02, 0x40, 0x00, 0x06, 0xAB, 0x00 };
             _ = ServerHolder.ServerInstance.SendPacket(data, stream);
 
 

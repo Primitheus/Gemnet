@@ -210,9 +210,9 @@ namespace Gemnet.Network.Packets
         public int PlayerNumber {get; set;}
         public int GameState {get; set;}
         public int unknownValue7 {get; set;}
-        public int MatchType {get; set;}
-        public int unknownValue8 {get; set;}
-        public int unknownValue9 {get; set;}
+        public byte MatchType {get; set;}
+        public ushort unknownValue8 {get; set;}
+        public ushort unknownValue9 {get; set;}
         public byte BattleType {get; set;}
         public int RoundNumber {get; set;}
         public int GameMode1 {get; set;}
@@ -246,8 +246,9 @@ namespace Gemnet.Network.Packets
             public static readonly int PlayerNumber = 128;
             public static readonly int GameState = 129;
             public static readonly int unknownValue7 = 130;
-            public static readonly int MatchType = 131;
-            public static readonly int unknownValue8 = 133;
+            public static readonly int unknownValue8 = 131;
+
+            public static readonly int MatchType = 133;
             public static readonly int unknownValue9 = 134;
             public static readonly int BattleType = 135;
             public static readonly int RoundNumber = 136;
@@ -302,9 +303,12 @@ namespace Gemnet.Network.Packets
                 BitConverter.GetBytes(room.PlayerNumber).CopyTo(buffer, PropertyOffsets.PlayerNumber+i);
                 BitConverter.GetBytes(room.GameState).CopyTo(buffer, PropertyOffsets.GameState+i);
                 BitConverter.GetBytes(room.unknownValue7).CopyTo(buffer, PropertyOffsets.unknownValue7+i);
-                BitConverter.GetBytes(room.MatchType).CopyTo(buffer, PropertyOffsets.MatchType+i);
-                                     
+
                 BitConverter.GetBytes(room.unknownValue8).CopyTo(buffer, PropertyOffsets.unknownValue8+i);
+
+
+                buffer[PropertyOffsets.MatchType+i] = room.MatchType;
+                                     
                 BitConverter.GetBytes(room.unknownValue9).CopyTo(buffer, PropertyOffsets.unknownValue9+i);
                 buffer[PropertyOffsets.BattleType+i] = room.BattleType;
 

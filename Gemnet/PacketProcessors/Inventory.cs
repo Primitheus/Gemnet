@@ -10,7 +10,10 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using static Program;
+using Gemnet.Shop.Boxes;
+using Gemnet.PacketProcessors.Extra;
+
+using static Gemnet.Program;
 
 namespace Gemnet.PacketProcessors
 {
@@ -109,22 +112,74 @@ namespace Gemnet.PacketProcessors
 
             OpenBoxReq request = OpenBoxReq.Deserialize(body);
 
+            int itemid = 0;
+            int itemend = 0;
+            int quantity = 0;
+
+
             Console.WriteLine($"Opening Box with ServerID={request.ServerID}");
+            OpenBoxRes response = new OpenBoxRes();
+            response.Type = type;
+            response.Action = action;
 
             var player = _playerManager.GetPlayerByStream(stream);
+            var query = ServerHolder.DatabaseInstance.SelectFirst<ModelInventory>(ModelInventory.GetItemFromServerID, new
+            {
+                SID = request.ServerID
+            });
 
-            // Delete Item from inventory.
+            if (query == null)
+            {
+                Console.WriteLine($"No inventory item found with ServerID={request.ServerID} for UserID={player.UserID}");
+                Util.GenericFail(type, action, stream);
+                return;
+            }
+
+            var box = BoxRegistry.GetBox(query.ItemID);
+
+            if (box == null)
+            {
+                Console.WriteLine($"Box with ItemID={query.ItemID} not found in registry.");
+                itemid = query.ItemID;
+                itemend = 1000;
+
+            }
+            else
+            {
+                BoxItem item = box.GetRandomItem();
+
+                if (item == null)
+                {
+                    Console.WriteLine($"No items found in box with ItemID={query.ItemID}.");
+                    itemid = query.ItemID;
+                    itemend = 1000;
+                    quantity = 1;
+                }
+                else if (item.ItemID == 0)
+                {
+                    Console.WriteLine($"Box item has invalid ItemID=0 in box with ItemID={query.ItemID}.");
+                    itemid = query.ItemID;
+                    itemend = 1000;
+                    quantity = 1;
+                }
+                else
+                {
+                    itemid = item.ItemID;
+                    itemend = item.ItemType;
+                    quantity = item.Quantity;
+                }
+
+            }
+
+           
+
+            // Delete Box.
             ServerHolder.DatabaseInstance.Execute(ModelInventory.DeleteItem, new
             {
                 SID = request.ServerID
             });
 
-            OpenBoxRes response = new OpenBoxRes();
-
-            // 100k Carats.
-            int itemid = 2070006;
-            int itemend = 3069;
-
+            // Add Item
             ServerHolder.DatabaseInstance.Execute(ModelInventory.InsertItem, new
             {
                 OID = player.UserID,
@@ -132,6 +187,7 @@ namespace Gemnet.PacketProcessors
                 END = itemend
             });
 
+            // Get new ServerID
             var ServerID = ServerHolder.DatabaseInstance.Select<ModelInventory>(ModelInventory.GetServerID, new
             {
                 ID = itemid,
@@ -139,18 +195,29 @@ namespace Gemnet.PacketProcessors
 
             });
 
-            response.Type = type;
-            response.Action = action;
 
             response.ServerID = ServerID.FirstOrDefault()?.ServerID ?? 0;
             response.ItemID = itemid;
             response.ItemEnd = itemend;
 
+            // Experimenting with these values.
+            if (itemend == 1130)
+            {
+                response.Unknown1 = 0x54; // Placeholder for any additional fields
+                response.Quantity = (byte)quantity;
+            }
+
+            if (itemend == 1000)
+            {
+                response.Unknown1 = 0x4E; // Placeholder for any additional fields
+                response.Quantity = (byte)quantity;
+            }
+
             string hexOutput = string.Join(", ", response.Serialize().Select(b => $"0x{b:X2}"));
             Console.WriteLine($"OpenBox Response: {hexOutput}");
 
             _ = ServerHolder.ServerInstance.SendPacket(response.Serialize(), stream);
-
+            
         }
 
 

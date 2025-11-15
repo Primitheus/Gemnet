@@ -6,16 +6,13 @@ namespace Gemnet.Settings
     {
         public class SData
         {
-
             public String ipAddress { get; set; }
             public UInt16 Port { get; set; }
-
             public UInt16 P2PPort { get; set; }
-
             public string DBConnectionString { get; set; }
             public string RC4Key { get; set; }
-
             public bool UseEncryption { get; set; }
+            public int? MaxConnections { get; set; } = 1000; // Default to 1000 connections
         }
 
         public static SData ImportSettings()
@@ -30,6 +27,7 @@ namespace Gemnet.Settings
                 DBConnectionString = envSettings["DBConnectionString"] as string,
                 UseEncryption = bool.Parse(envSettings["UseEncryption"] as string),
                 RC4Key = envSettings["RC4Key"] as string,
+                MaxConnections = int.TryParse(envSettings["MaxConnections"] as string, out var maxConn) ? maxConn : 1000,
             };
         }
 

@@ -90,6 +90,8 @@ public class PlayerManager
         return player;
     }
 
+    
+    // Online Player
     public Player GetPlayerById(int userId)
     {
         if (_playerIdToStream.TryGetValue(userId, out var stream))
@@ -202,6 +204,22 @@ public class PlayerManager
 
         return finalItemIds;
     }
+
+    public int GetCarats(int userId)
+    {
+        var playerData = _database.Select<ModelAccount>(ModelAccount.QueryCashCarats, new { ID = userId }).FirstOrDefault();
+
+
+        return playerData?.Carats ?? -1;
+    }
+
+    public int GetEXP(int userId)
+    {
+        var playerData = _database.Select<ModelAccount>(ModelAccount.QueryCashExp, new { ID = userId }).FirstOrDefault();
+
+        return playerData?.EXP ?? -1;
+    }
+
 
     public List<Player> GetAllOnlinePlayers()
     {

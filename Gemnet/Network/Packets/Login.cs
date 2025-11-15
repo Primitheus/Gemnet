@@ -3,7 +3,7 @@ using System.Text;
 using Gemnet.Network.Header;
 using Newtonsoft.Json.Linq;
 using static Gemnet.Packets.Enums.Packets;
-using static Program;
+using static Gemnet.Program;
 
 namespace Gemnet.Packets.Login;
 

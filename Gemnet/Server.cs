@@ -1,354 +1,449 @@
-﻿using SendPacket;
-using System.Net.Sockets;
+﻿using System;
 using System.Net;
-using System.IO;
-using System;
-using Gemnet.Packets;
-using System.Collections.Concurrent;
-using static Gemnet.Packets.Enums.Packets;
-using Gemnet.Network.Packets;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+using Gemnet.Network;
 using Gemnet.Settings;
 using Gemnet.Security;
-using static Program;
+using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Linq;
+using Gemnet.Packets.Enums;
+using Gemnet.Network.Packets;
+using Gemnet.PacketProcessors;
+using Gemnet.Shop.Boxes;
 
-
-public class Server
+namespace Gemnet
 {
-
-    private static PlayerManager _playerManager = ServerHolder._playerManager;
-    private static GameManager _gameManager = ServerHolder._gameManager;
-
-
-    private const int MaxBufferSize = 1440;
-    private const int PacketHeaderSize = 6; // 2 bytes for type + 2 bytes for length + 2 bytes for action
-    private const int TypeOffset = 0;
-    private const int LengthOffset = 2;
-    private const int ActionOffset = 4;
-
-    private Settings.SData _settings;
-
-    private TcpListener tcpListener;
-    private ConcurrentBag<TcpClient> clients = new ConcurrentBag<TcpClient>();
-    private ConcurrentDictionary<NetworkStream, ClientCipherState> clientCiphers = new();
-
-    Parser parser = new Parser();
-
-    public Server(IPAddress ipAddress, int port)
+    public class Server : IDisposable
     {
-        tcpListener = new TcpListener(IPAddress.Any, port);
-        _settings = Settings.ImportSettings("./settings.json");
+        private readonly ILogger<Server> _logger;
+        private readonly Settings.Settings.SData _settings;
+        private readonly ConnectionManager _connectionManager;
+        private readonly PacketProcessor _packetProcessor;
+        private readonly PlayerManager _playerManager;
+        private readonly GameManager _gameManager;
 
-    }
+        private TcpListener _tcpListener;
+        private CancellationTokenSource _cancellationTokenSource;
+        private bool _disposed = false;
 
-    public async Task Start()
-    {
-        tcpListener.Start();
-        Console.WriteLine($"<Gemnet - Rumble Fighter Server Emulator> Port: {tcpListener.LocalEndpoint}");
-        Console.WriteLine($"Settings: {_settings.Port}, {_settings.UseEncryption}, {_settings.RC4Key}");
-
-
-        while (true)
+        public Server(
+            ILogger<Server> logger,
+            Settings.Settings.SData settings,
+            PlayerManager playerManager,
+            GameManager gameManager)
         {
-            TcpClient client = await tcpListener.AcceptTcpClientAsync();
-            clients.Add(client);
-            _ = ProcessClient(client);
-
-        }
-    }
-
-    private async Task ProcessClient(TcpClient client)
-    {
-        try
-        {
-            var stream = client.GetStream();
-            Console.WriteLine($"Client connected: {((IPEndPoint)client.Client.RemoteEndPoint).ToString()}");
-
-            if (_settings.UseEncryption)
-            {
-                var cipherState = new ClientCipherState(_settings.RC4Key);
-                clientCiphers.TryAdd(stream, cipherState);
-
-            }
-
-            byte[] buffer = new byte[MaxBufferSize];
-            int bytesRead = 0;
-
-            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-            {
-                await ParsePackets(buffer, bytesRead, stream);
-            }
-        }
-        catch (IOException ex)
-        {
-            Console.WriteLine("Client connection lost.");
-        }
-        catch (ObjectDisposedException)
-        {
-            Console.WriteLine("Stream already disposed.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Unexpected error: {ex.Message}");
-        }
-
-        finally
-        {
-            clients.TryTake(out client);
-            client.Close();
-            Console.WriteLine($"Client disconnected: {client.Client.RemoteEndPoint}");
-        }
-    }
-
-    private async Task ParsePackets(byte[] buffer, int bytesRead, NetworkStream stream)
-    {
-
-        int offset = 0;
-        byte[] packet = new byte[bytesRead];
-
-        while (offset < bytesRead)
-        {
-            if (offset + PacketHeaderSize > bytesRead)
-            {
-                Console.WriteLine("Not Enough bytes for a complete packet header.");
-                break;
-            }
-
-            // if encryption enabled then decrypt the packet.
-            if (_settings.UseEncryption)
-            {
-                if (clientCiphers.TryGetValue(stream, out var cipherState))
-                {
-                    // To decrypt incoming data:
-                    packet = cipherState.Decryptor.Decrypt(buffer, bytesRead);
-
-                }
-            }
-            else
-            {
-                packet = buffer;
-            }
-
-
-            ushort type = (ushort)((packet[offset + TypeOffset] << 8) | packet[offset + TypeOffset + 1]);
-            ushort length = (ushort)((packet[offset + LengthOffset] << 8) | packet[offset + LengthOffset + 1]);
-            ushort action = BitConverter.ToUInt16(packet, offset + ActionOffset);
-
-            if (length > bytesRead)
-            {
-                Console.WriteLine($"Length: {length}, Bytes Read: {bytesRead}.");
-                break;
-            }
-
-            byte[] packetBody = new byte[length];
-            Buffer.BlockCopy(buffer, offset + PacketHeaderSize, packetBody, 0, length);
-
-            // Process the packet (type, action, packetBody)
-
-            parser.ProcessPacketAsync(type, action, packet, stream);
-
-            offset += PacketHeaderSize + length;
-        }
-
-        if (offset < bytesRead)
-        {
-            // Move the remaining bytes to the start of the buffer
-            Buffer.BlockCopy(buffer, offset, buffer, 0, bytesRead - offset);
-        }
-
-    }
-
-    public async Task SendPacket(ushort type, ushort length, ushort action, NetworkStream stream)
-    {
-        String TypeName = Enum.GetName((HeaderType)type);
-
-        byte[] packet = new byte[length];
-        packet[0] = (byte)(type >> 8);
-        packet[1] = (byte)type;
-        packet[2] = (byte)(length >> 8);
-        packet[3] = (byte)length;
-        packet[4] = (byte)action;
-        packet[5] = (byte)(action >> 8);
-
-
-        if (_settings.UseEncryption)
-        {
-            if (clientCiphers.TryGetValue(stream, out var cipherState))
-            {
-                packet = cipherState.Encryptor.Encrypt(packet);
-            }
-        }
-
-        await stream.WriteAsync(packet, 0, packet.Length);
-
-        Console.WriteLine($"Sent Packet: Type={TypeName}, Action={action:X2}, Length={length}");
-    }
-
-    public async Task SendPacket(ushort type, ushort length, ushort action, byte[] data, NetworkStream stream)
-    {
-        String TypeName = Enum.GetName((HeaderType)type);
-
-        byte[] packet = new byte[length];
-        packet[0] = (byte)(type >> 8);
-        packet[1] = (byte)type;
-        packet[2] = (byte)(length >> 8);
-        packet[3] = (byte)length;
-        packet[4] = (byte)action;
-        packet[5] = (byte)(action >> 8);
-
-        if (data != null)
-        {
-            data.CopyTo(packet, 6);
-
-        }
-
-        if (_settings.UseEncryption)
-        {
-            if (clientCiphers.TryGetValue(stream, out var cipherState))
-            {
-                packet = cipherState.Encryptor.Encrypt(packet);
-            }
-        }
-
-        await stream.WriteAsync(packet, 0, packet.Length);
-
-        Console.WriteLine("PACKET TEST!");
-        Console.WriteLine($"Sent Packet: Type={TypeName}, Action={action:X2}, Length={length}");
-    }
-
-    public async Task SendPacket(byte[] data, NetworkStream stream)
-    {
-
-        if (_settings.UseEncryption)
-        {
-            if (clientCiphers.TryGetValue(stream, out var cipherState))
-            {
-                data = cipherState.Encryptor.Encrypt(data, data.Length);
-            }
-        }
-
-        await stream.WriteAsync(data, 0, data.Length);
-
-        //Console.WriteLine($"Sent Packet");
-    }
-
-    public async Task SendPacket(byte[] data, int maxBufferSize, NetworkStream stream)
-    {
-        int totalLength = data.Length;
-        int bytesSent = 0;
-
-        while (bytesSent < totalLength)
-        {
-            int remainingLength = totalLength - bytesSent;
-            int bufferSize = Math.Min(maxBufferSize, remainingLength);
-
-            if (_settings.UseEncryption)
-            {
-                if (clientCiphers.TryGetValue(stream, out var cipherState))
-                {
-                    data = cipherState.Encryptor.Encrypt(data);
-                }
-            }
-                
-            await stream.WriteAsync(data, bytesSent, bufferSize);
-
-            bytesSent += bufferSize;
-            //Console.WriteLine($"Sent Packet ({bytesSent}/{totalLength} bytes)");
-
-        }
-    }
-
-    public async Task SendToRoom(byte[] data, ushort roomId)
-    {
-        //var room = _gameManager.GetRoom(roomId);
-        var playersInRoom = _gameManager.GetPlayersInRoom(roomId);
-        Console.WriteLine("Sending To All Players in Room: {roomId}");
-
+            _logger = logger;
+            _settings = settings;
+            _playerManager = playerManager;
+            _gameManager = gameManager;
             
-        foreach (var player in playersInRoom)
-        {
-            Console.WriteLine($"Sending To Player: {player.UserIGN}");
-            await SendPacket(data, player.Stream);
-
-        }
-
-    }
-
-
-    public async Task SendToRoomExcludeSender(byte[] data, ushort roomId, NetworkStream sendingStream)
-    {
-        //var room = _gameManager.GetRoom(roomId);
-        var playersInRoom = _gameManager.GetPlayersInRoom(roomId);
-        Console.WriteLine("Sending To All Players in Room but Excluding Sender: {roomId}");
-
+            _connectionManager = new ConnectionManager(settings.MaxConnections ?? 1000);
+            var packetProcessorLogger = logger;
+            _packetProcessor = new PacketProcessor(packetProcessorLogger, _connectionManager, _playerManager, _gameManager);
             
-        foreach (var player in playersInRoom)
-        {
-            if (player.Stream == sendingStream)
-            {
-                Console.WriteLine("Skipping Sender");
-            }
-            else
-            {
-                await SendPacket(data, player.Stream);
-
-            }
-
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
-    }
-
-    public async Task SendPacket(byte[] data, NetworkStream senderStream, bool Exclude)
-    {
-        foreach (var client in clients)
+        public async Task StartAsync()
         {
-            // Skip the sender client if == true;
+            try
+            {
+                _tcpListener = new TcpListener(IPAddress.Any, _settings.Port);
+                _tcpListener.Start();
 
-            var clientStream = client.GetStream();
-            if (clientStream == senderStream && Exclude == true)
-            {
-                Console.WriteLine("Skipping Sender");
-                
-            }
-            else
-            {
-                if (_settings.UseEncryption)
+                BoxLoader.LoadBoxes("Data/Boxes"); // Initialize Box data.
+
+                _logger.LogInformation("Gemnet - Rumble Fighter Server Emulator started on port {Port}", _settings.Port);
+                _logger.LogInformation("Settings: Port={Port}, Encryption={UseEncryption}, RC4Key={RC4Key}", 
+                    _settings.Port, _settings.UseEncryption, _settings.RC4Key);
+
+                // Start connection monitoring task
+                _ = Task.Run(MonitorConnectionsAsync, _cancellationTokenSource.Token);
+
+                while (!_cancellationTokenSource.Token.IsCancellationRequested)
                 {
-                    if (clientCiphers.TryGetValue(clientStream, out var cipherState))
+                    try
                     {
-                        data = cipherState.Encryptor.Encrypt(data);
+                        var client = await _tcpListener.AcceptTcpClientAsync();
+                        
+                        // Handle client connection asynchronously
+                        _ = Task.Run(() => HandleClientConnectionAsync(client), _cancellationTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error accepting client connection");
                     }
                 }
-
-                await clientStream.WriteAsync(data, 0, data.Length);
-
             }
-
-            Console.WriteLine($"Sent Packet Whilst Excluding Player Who Sent Req");
-        }
-    }
-
-
-    // Notify Packet To ALL Connected Clients.
-    public async Task SendNotificationPacket(byte[] data)
-    {
-        foreach (var client in clients)
-        {
-
-            var clientStream = client.GetStream();
-
-            if (_settings.UseEncryption)
+            catch (Exception ex)
             {
-                if (clientCiphers.TryGetValue(clientStream, out var cipherState))
+                _logger.LogError(ex, "Failed to start server");
+                throw;
+            }
+        }
+
+        private async Task HandleClientConnectionAsync(TcpClient client)
+        {
+            var remoteEndPoint = ((IPEndPoint)client.Client.RemoteEndPoint).ToString();
+            
+            try
+            {
+                _logger.LogInformation("Client connecting: {RemoteEndPoint}", remoteEndPoint);
+
+                // Try to add connection to connection manager
+                if (!await _connectionManager.TryAddConnectionAsync(client, _settings.UseEncryption ? _settings.RC4Key : null))
                 {
-                    data = cipherState.Encryptor.Encrypt(data);
+                    _logger.LogWarning("Failed to add connection for {RemoteEndPoint} - server may be at capacity", remoteEndPoint);
+                    client.Close();
+                    return;
+                }
+
+                var stream = client.GetStream();
+                var buffer = new byte[1440]; // MaxBufferSize
+                var connection = _connectionManager.GetConnection(stream);
+
+                _logger.LogInformation("Client connected: {RemoteEndPoint}", remoteEndPoint);
+
+                while (!_cancellationTokenSource.Token.IsCancellationRequested && client.Connected)
+                {
+                    try
+                    {
+                        var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, _cancellationTokenSource.Token);
+                        
+                        if (bytesRead == 0)
+                        {
+                            _logger.LogInformation("Client {RemoteEndPoint} disconnected (graceful)", remoteEndPoint);
+                            break;
+                        }
+
+                        await _packetProcessor.ProcessPacketAsync(buffer, bytesRead, stream);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (IOException ex)
+                    {
+                        _logger.LogInformation("Client {RemoteEndPoint} disconnected: {Message}", remoteEndPoint, ex.Message);
+                        break;
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        _logger.LogInformation("Stream disposed for client {RemoteEndPoint}", remoteEndPoint);
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Unexpected error handling client {RemoteEndPoint}", remoteEndPoint);
+                        break;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in client connection handler for {RemoteEndPoint}", remoteEndPoint);
+            }
+            finally
+            {
+                try
+                {
+                    var stream = client.GetStream();
+                    var player = _playerManager.GetPlayerByStream(stream);
 
-            await clientStream.WriteAsync(data, 0, data.Length);
+                    Query.UserUpdateRoom(player, player?.CurrentRoom ?? 0);
 
-            Console.WriteLine($"Sending Notify Packet");
+                    _gameManager.LeaveRoom(stream, player?.CurrentRoom ?? 0);
+                    _playerManager.TryRemovePlayer(stream);
+
+                    _connectionManager.RemoveConnection(stream);
+                    client.Close();
+                    _logger.LogInformation("Client {RemoteEndPoint} cleanup completed", remoteEndPoint);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error during cleanup for client {RemoteEndPoint}", remoteEndPoint);
+                }
+            }
+        }
+
+        private async Task MonitorConnectionsAsync()
+        {
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    var activeConnections = _connectionManager.ActiveConnectionCount;
+                    _logger.LogDebug("Active connections: {Count}", activeConnections);
+
+                    // Check for idle connections and disconnect them
+                    var connections = _connectionManager.GetAllConnections();
+                    var now = DateTime.UtcNow;
+                    
+                    foreach (var connection in connections)
+                    {
+                        if (now - connection.LastActivity > TimeSpan.FromMinutes(30)) // 30 minute timeout
+                        {
+                            _logger.LogInformation("Disconnecting idle connection: {RemoteEndPoint}", connection.RemoteEndPoint);
+                            connection.Disconnect();
+                        }
+                    }
+
+                    await Task.Delay(TimeSpan.FromMinutes(1), _cancellationTokenSource.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in connection monitor");
+                }
+            }
+        }
+
+        public async Task StopAsync()
+        {
+            if (_disposed) return;
+
+            _logger.LogInformation("Stopping server...");
+            
+            _cancellationTokenSource.Cancel();
+
+            try
+            {
+                _tcpListener?.Stop();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error stopping TCP listener");
+            }
+
+            _logger.LogInformation("Server stopped");
+        }
+
+        // Packet sending methods with improved error handling
+        public async Task SendPacketAsync(ushort type, ushort length, ushort action, NetworkStream stream)
+        {
+            try
+            {
+                var connection = _connectionManager.GetConnection(stream);
+                if (connection == null)
+                {
+                    _logger.LogWarning("Attempted to send packet to unknown connection");
+                    return;
+                }
+
+                var typeName = $"0x{type:X4}";
+                var packet = new byte[length];
+                
+                packet[0] = (byte)(type >> 8);
+                packet[1] = (byte)type;
+                packet[2] = (byte)(length >> 8);
+                packet[3] = (byte)length;
+                packet[4] = (byte)action;
+                packet[5] = (byte)(action >> 8);
+
+                if (connection.CipherState != null)
+                {
+                    packet = connection.CipherState.Encryptor.Encrypt(packet);
+                }
+
+                await stream.WriteAsync(packet, 0, packet.Length);
+                _logger.LogDebug("Sent packet: Type={TypeName}, Action={Action:X2}, Length={Length}", typeName, action, length);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending packet");
+                var connection = _connectionManager.GetConnection(stream);
+                connection?.Disconnect();
+            }
+        }
+
+        public async Task SendPacketAsync(ushort type, ushort length, ushort action, byte[] data, NetworkStream stream)
+        {
+            try
+            {
+                var connection = _connectionManager.GetConnection(stream);
+                if (connection == null)
+                {
+                    _logger.LogWarning("Attempted to send packet to unknown connection");
+                    return;
+                }
+
+                var typeName = $"0x{type:X4}";
+                var packet = new byte[length];
+                
+                packet[0] = (byte)(type >> 8);
+                packet[1] = (byte)type;
+                packet[2] = (byte)(length >> 8);
+                packet[3] = (byte)length;
+                packet[4] = (byte)action;
+                packet[5] = (byte)(action >> 8);
+
+                if (data != null)
+                {
+                    data.CopyTo(packet, 6);
+                }
+
+                if (connection.CipherState != null)
+                {
+                    packet = connection.CipherState.Encryptor.Encrypt(packet);
+                }
+
+                await stream.WriteAsync(packet, 0, packet.Length);
+                _logger.LogDebug("Sent packet: Type={TypeName}, Action={Action:X2}, Length={Length}", typeName, action, length);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending packet");
+                var connection = _connectionManager.GetConnection(stream);
+                connection?.Disconnect();
+            }
+        }
+
+        public async Task SendPacketAsync(byte[] data, NetworkStream stream)
+        {
+            try
+            {
+                var connection = _connectionManager.GetConnection(stream);
+                if (connection == null)
+                {
+                    _logger.LogWarning("Attempted to send packet to unknown connection");
+                    return;
+                }
+
+                if (connection.CipherState != null)
+                {
+                    data = connection.CipherState.Encryptor.Encrypt(data, data.Length);
+                }
+
+                await stream.WriteAsync(data, 0, data.Length);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending packet");
+                var connection = _connectionManager.GetConnection(stream);
+                connection?.Disconnect();
+            }
+        }
+
+        public async Task SendToRoomAsync(byte[] data, ushort roomId)
+        {
+            try
+            {
+                var playersInRoom = _gameManager.GetPlayersInRoom(roomId);
+                _logger.LogDebug("Sending to {PlayerCount} players in room {RoomId}", playersInRoom.Count, roomId);
+
+                var tasks = playersInRoom.Select(player => SendPacketAsync(data, player.Stream));
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending to room {RoomId}", roomId);
+            }
+        }
+
+        public async Task SendToRoomExcludeSenderAsync(byte[] data, ushort roomId, NetworkStream senderStream)
+        {
+            try
+            {
+                var playersInRoom = _gameManager.GetPlayersInRoom(roomId);
+                _logger.LogDebug("Sending to {PlayerCount} players in room {RoomId} (excluding sender)", playersInRoom.Count, roomId);
+
+                var tasks = playersInRoom
+                    .Where(player => player.Stream != senderStream)
+                    .Select(player => SendPacketAsync(data, player.Stream));
+                
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending to room {RoomId} (excluding sender)", roomId);
+            }
+        }
+
+        public async Task SendToAllAsync(byte[] data, NetworkStream? senderStream = null, bool excludeSender = false)
+        {
+            try
+            {
+                var connections = _connectionManager.GetAllConnections();
+                var tasks = connections
+                    .Where(conn => !excludeSender || conn.Stream != senderStream)
+                    .Select(conn => SendPacketAsync(data, conn.Stream));
+                
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending to all clients");
+            }
+        }
+
+        public PacketProcessor GetPacketProcessor()
+        {
+            return _packetProcessor;
+        }
+
+        public IEnumerable<ClientConnection> GetAllConnections()
+        {
+            return _connectionManager.GetAllConnections();
+        }
+
+        // Legacy methods for backward compatibility with existing packet processors
+        public async Task SendPacket(byte[] data, NetworkStream stream)
+        {
+            await SendPacketAsync(data, stream);
+        }
+
+        public async Task SendPacket(ushort type, ushort length, ushort action, NetworkStream stream)
+        {
+            await SendPacketAsync(type, length, action, stream);
+        }
+
+        public async Task SendPacket(ushort type, ushort length, ushort action, byte[] data, NetworkStream stream)
+        {
+            await SendPacketAsync(type, length, action, data, stream);
+        }
+
+        public async Task SendToRoom(byte[] data, ushort roomId)
+        {
+            await SendToRoomAsync(data, roomId);
+        }
+
+        public async Task SendToRoomExcludeSender(byte[] data, ushort roomId, NetworkStream senderStream)
+        {
+            await SendToRoomExcludeSenderAsync(data, roomId, senderStream);
+        }
+
+        public async Task SendNotificationPacket(byte[] data, NetworkStream stream)
+        {
+            await SendPacketAsync(data, stream);
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+
+            try
+            {
+                StopAsync().Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error during server disposal");
+            }
+
+            _cancellationTokenSource?.Dispose();
+            _connectionManager?.Dispose();
         }
     }
-
-
 }

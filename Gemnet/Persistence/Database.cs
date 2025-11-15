@@ -35,10 +35,7 @@ namespace Gemnet.Persistence
             if (!this.IsConnected())
                 this.Connect();
 
-            using (var conn = this.m_connection)
-            {
-                return conn.Query<T>(filter, param).ToList();
-            }
+            return this.m_connection.Query<T>(filter, param).ToList();
         }
 
         public int Update<T>(string filter, object? param)
@@ -46,8 +43,7 @@ namespace Gemnet.Persistence
             if (!this.IsConnected())
                 this.Connect();
 
-            using (var conn = this.m_connection)
-                return conn.Execute(filter, param);
+            return this.m_connection.Execute(filter, param);
         }
 
         public T Scalar<T>(string filter, object? param)
@@ -55,8 +51,7 @@ namespace Gemnet.Persistence
             if (!this.IsConnected())
                 this.Connect();
 
-            using (var conn = this.m_connection)
-                return (T)conn.ExecuteScalar(filter, param);
+            return (T)this.m_connection.ExecuteScalar(filter, param);
         }
 
         public T SelectFirst<T>(string filter, object? param)
@@ -66,8 +61,7 @@ namespace Gemnet.Persistence
 
             try
             {
-                using (var conn = this.m_connection)
-                    return (T)conn.QuerySingle<T>(filter, param);
+                return (T)this.m_connection.QuerySingle<T>(filter, param);
             } catch {
                 return default(T);
             }
@@ -78,8 +72,7 @@ namespace Gemnet.Persistence
             if (!this.IsConnected())
                 this.Connect();
 
-            using (var conn = this.m_connection)
-                return conn.Execute(filter, param);
+            return this.m_connection.Execute(filter, param);
         }
     }
 }

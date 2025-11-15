@@ -42,7 +42,11 @@ public class ModelAccount : IModel
 
     public static readonly string QueryCashCarats = "SELECT Carats FROM rumblefighter.accounts WHERE UUID = @ID";
     public static readonly string QueryCashAstros = "SELECT Astros FROM rumblefighter.accounts WHERE UUID = @ID";
+    public static readonly string QueryCashExp = "SELECT EXP FROM rumblefighter.accounts WHERE UUID = @ID";
+
     public static readonly string QueryAddCarats = "UPDATE accounts SET Carats = Carats + @amount WHERE UUID = @ID";
+    public static readonly string QueryAddEXP = "UPDATE accounts SET EXP = EXP + @amount WHERE UUID = @ID";
+
     public static readonly string QueryAddAstros = "UPDATE accounts SET Astros = Astros + @amount WHERE UUID = @ID";
     public static readonly string QueryGetIdFromUsername = "SELECT UUID FROM accounts WHERE IGN = @username";
     public static readonly string QueryUpdateAvatar = "UPDATE accounts SET CurrentAvatar = @avatar WHERE UUID = @ID";

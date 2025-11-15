@@ -96,6 +96,12 @@ namespace Gemnet.Packets.Enums
             UNKNOWN_S = 0x8b,
             UNKNOWN_T = 0xb4,
             UNKNOWN_U = 0x44,
+            
+            
+            S2C_FRIEND_REQ_RECIEVE = 0x11,
+            S2C_FRIEND_ACCEPTED = 0x12,
+            S2C_FRIEND_STATUS = 0x13,
+
 
             GEM_LOGIN = 0xba,
             GEM_UNKNOWN_1 = 0xc5,

@@ -137,13 +137,17 @@ namespace Gemnet.Network.Packets
         public int MaxPlayers { get; set; }
         public byte GameState { get; set; } // Game State
         public ushort unknownValue7 { get; set; }
+        public ushort unknownValue8 { get; set; }
+
         public byte MatchType { get; set; } //Single or Team
-        public byte unknownValue8 { get; set; }
         public byte BattleType { get; set; }
-        public int RoundNumber { get; set; }
+        public byte RoundNumber { get; set; }
         public ushort GameMode1 { get; set; }
         public ushort GameMode2 { get; set; }
         public ushort GameMode3 { get; set; }
+        public ushort Map1 { get; set; }
+        public ushort Map2 { get; set; }
+        public ushort Map3 { get; set; }
         
 
         public int UnknownValue13 { get; set; }
@@ -175,6 +179,12 @@ namespace Gemnet.Network.Packets
             public static readonly int GameMode1 = 135;
             public static readonly int GameMode2 = 139;
             public static readonly int GameMode3 = 143;
+
+            public static readonly int Map1 = 137;
+            public static readonly int Map2 = 141;
+            public static readonly int Map3 = 145;
+
+
             public static readonly int UnknownValue13 = 189;
             public static readonly int UnknownValue14 = 191;
             public static readonly int UnknownValue15 = 193;
@@ -209,18 +219,22 @@ namespace Gemnet.Network.Packets
             buffer[PropertyOffsets.GameState] = GameState;
             BitConverter.GetBytes(unknownValue7).CopyTo(buffer, PropertyOffsets.unknownValue7);
             buffer[PropertyOffsets.MatchType] = MatchType;
-            buffer[PropertyOffsets.unknownValue8] = unknownValue8;
+            BitConverter.GetBytes(unknownValue8).CopyTo(buffer, PropertyOffsets.unknownValue8);
             buffer[PropertyOffsets.BattleType] = BattleType;
-            BitConverter.GetBytes(RoundNumber).CopyTo(buffer, PropertyOffsets.RoundNumber);
+            buffer[PropertyOffsets.RoundNumber] = RoundNumber;
 
             BitConverter.GetBytes(GameMode1).CopyTo(buffer, PropertyOffsets.GameMode1);
             BitConverter.GetBytes(GameMode2).CopyTo(buffer, PropertyOffsets.GameMode2);
             BitConverter.GetBytes(GameMode3).CopyTo(buffer, PropertyOffsets.GameMode3);
 
-            BitConverter.GetBytes(UnknownValue13).CopyTo(buffer, PropertyOffsets.UnknownValue13);
-            BitConverter.GetBytes(UnknownValue13).CopyTo(buffer, PropertyOffsets.UnknownValue14);
-            BitConverter.GetBytes(UnknownValue13).CopyTo(buffer, PropertyOffsets.UnknownValue15);
-            BitConverter.GetBytes(UnknownValue13).CopyTo(buffer, PropertyOffsets.UnknownValue16); // to here
+            BitConverter.GetBytes(Map1).CopyTo(buffer, PropertyOffsets.Map1);
+            BitConverter.GetBytes(Map2).CopyTo(buffer, PropertyOffsets.Map2);
+            BitConverter.GetBytes(Map3).CopyTo(buffer, PropertyOffsets.Map3);
+
+            BitConverter.GetBytes(5).CopyTo(buffer, PropertyOffsets.UnknownValue13);
+            BitConverter.GetBytes(5).CopyTo(buffer, PropertyOffsets.UnknownValue14);
+            BitConverter.GetBytes(5).CopyTo(buffer, PropertyOffsets.UnknownValue15);
+            BitConverter.GetBytes(5).CopyTo(buffer, PropertyOffsets.UnknownValue16); // to here
             Encoding.ASCII.GetBytes(Country).CopyTo(buffer, PropertyOffsets.Country);
             Encoding.ASCII.GetBytes(Region).CopyTo(buffer, PropertyOffsets.Region);
 
@@ -687,14 +701,14 @@ namespace Gemnet.Network.Packets
     public class ChangeMapReq : HeaderPacket
     {
         public ushort unknownValue1 { get; set; }
-        public ushort unknownValue2 { get; set; }
+        public byte ItemToggle { get; set; }
 
-        public byte unknownValue3 { get; set; }
+        public byte BattleType { get; set; }
 
         public byte RoundNumber { get; set; }
-        public int GameMode1 { get; set; }
-        public int GameMode2 { get; set; }
-        public int GameMode3 { get; set; }
+        public ushort GameMode1 { get; set; }
+        public ushort GameMode2 { get; set; }
+        public ushort GameMode3 { get; set; }
 
         public ushort Map1 { get; set; }
         public ushort Map2 { get; set; }
@@ -703,17 +717,17 @@ namespace Gemnet.Network.Packets
         private struct PropertyOffsets
         {
             public static readonly int unknownValue1 = 6;
-            public static readonly int unknownValue2 = 8;
+            public static readonly int ItemToggle = 8;
 
-            public static readonly int unknownValue3 = 11;
+            public static readonly int BattleType = 11;
 
             public static readonly int RoundNumber = 12;
             public static readonly int GameMode1 = 13;
-            public static readonly int GameMode2 = 15;
-            public static readonly int GameMode3 = 17;
+            public static readonly int GameMode2 = 17;
+            public static readonly int GameMode3 = 21;
 
-            public static readonly int Map1 = 19;
-            public static readonly int Map2 = 21;
+            public static readonly int Map1 = 15;
+            public static readonly int Map2 = 19;
             public static readonly int Map3 = 23;
 
         }
@@ -727,9 +741,9 @@ namespace Gemnet.Network.Packets
             packet.Action = BitConverter.ToUInt16(data, 4);
 
             packet.unknownValue1 = Convert.ToUInt16(data[PropertyOffsets.unknownValue1]);
-            packet.unknownValue2 = Convert.ToUInt16(data[PropertyOffsets.unknownValue2]);
+            packet.ItemToggle = data[PropertyOffsets.ItemToggle];
 
-            packet.unknownValue3 = data[PropertyOffsets.unknownValue3];
+            packet.BattleType = data[PropertyOffsets.BattleType];
 
             packet.RoundNumber = data[PropertyOffsets.RoundNumber];
             packet.GameMode1 = Convert.ToUInt16(data[PropertyOffsets.GameMode1]);
@@ -747,14 +761,14 @@ namespace Gemnet.Network.Packets
     public class ChangeMapRes : HeaderPacket
     {
         public ushort unknownValue1 { get; set; }
-        public ushort unknownValue2 { get; set; }
+        public byte ItemToggle { get; set; }
 
-        public byte unknownValue3 { get; set; }
+        public byte BattleType { get; set; }
 
         public byte RoundNumber { get; set; }
-        public int GameMode1 { get; set; }
-        public int GameMode2 { get; set; }
-        public int GameMode3 { get; set; }
+        public ushort GameMode1 { get; set; }
+        public ushort GameMode2 { get; set; }
+        public ushort GameMode3 { get; set; }
 
         public ushort Map1 { get; set; }
         public ushort Map2 { get; set; }
@@ -763,17 +777,17 @@ namespace Gemnet.Network.Packets
         private struct PropertyOffsets
         {
             public static readonly int unknownValue1 = 6;
-            public static readonly int unknownValue2 = 8;
+            public static readonly int ItemToggle = 8;
 
-            public static readonly int unknownValue3 = 11;
+            public static readonly int BattleType = 11;
 
             public static readonly int RoundNumber = 12;
             public static readonly int GameMode1 = 13;
-            public static readonly int GameMode2 = 15;
-            public static readonly int GameMode3 = 17;
+            public static readonly int GameMode2 = 17;
+            public static readonly int GameMode3 = 21;
 
-            public static readonly int Map1 = 19;
-            public static readonly int Map2 = 21;
+            public static readonly int Map1 = 15;
+            public static readonly int Map2 = 19;
             public static readonly int Map3 = 23;
         }
 
@@ -788,9 +802,10 @@ namespace Gemnet.Network.Packets
             base.Serialize().CopyTo(buffer, offset);
 
             BitConverter.GetBytes(unknownValue1).CopyTo(buffer, PropertyOffsets.unknownValue1);
-            BitConverter.GetBytes(unknownValue2).CopyTo(buffer, PropertyOffsets.unknownValue2);
 
-            buffer[PropertyOffsets.unknownValue3] = unknownValue3;
+            buffer[PropertyOffsets.ItemToggle] = ItemToggle;
+
+            buffer[PropertyOffsets.BattleType] = BattleType;
             buffer[PropertyOffsets.RoundNumber] = RoundNumber;
 
             BitConverter.GetBytes(GameMode1).CopyTo(buffer, PropertyOffsets.GameMode1);

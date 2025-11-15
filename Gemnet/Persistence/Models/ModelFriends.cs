@@ -26,7 +26,7 @@ public static readonly string QueryCreateTable = @"CREATE TABLE IF NOT EXISTS `f
     public static readonly string QuerySendFriendRequest = "INSERT INTO friends (RequesterUUID, ReceiverUUID, Status) VALUES (@RequesterUUID, @ReceiverUUID, 'Accepted');";
 
     // Accept Friend Request
-    public static readonly string QueryAcceptFriendRequest = "UPDATE friends SET Status = 'Accepted' WHERE RequesterUUID = @RequesterUUID AND ReceiverUUID = @ReceiverUUID;";
+    public static readonly string QueryAcceptFriendRequest = "UPDATE friends SET Status = 'Accepted' WHERE ((RequesterUUID = @RequesterUUID AND ReceiverUUID = @ReceiverUUID) OR (RequesterUUID = @ReceiverUUID AND ReceiverUUID = @RequesterUUID)) AND Status = 'Pending';";
 
     // Delete Friend 
     public static readonly string QueryDeleteFriend = "DELETE FROM friends WHERE (RequesterUUID = @RequesterUUID AND ReceiverUUID = @ReceiverUUID) OR (RequesterUUID = @ReceiverUUID AND ReceiverUUID = @RequesterUUID);";

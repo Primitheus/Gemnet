@@ -34,14 +34,16 @@ namespace GemnetCS.Network.Packets
         public int ServerID { get; set; }
         public int ItemID { get; set; }
         public int ItemEnd { get; set; }
-        public int unknown { get; set; } = 3925; // Placeholder for any additional fields
-
+        public byte Unknown1 { get; set; } // Placeholder for any additional fields
+        public byte Quantity { get; set; }
         private struct PropertyOffsets
         {
             public const int ServerID = 6;
             public const int ItemID = 10;
             public const int ItemEnd = 14;
-            public const int Unknown = 18;
+            public const int Unknown1 = 18;
+            public const int Quantity = 19;
+
         }
 
         public override byte[] Serialize()
@@ -57,7 +59,8 @@ namespace GemnetCS.Network.Packets
             BitConverter.GetBytes(ServerID).CopyTo(buffer, PropertyOffsets.ServerID);
             BitConverter.GetBytes(ItemID).CopyTo(buffer, PropertyOffsets.ItemID);
             BitConverter.GetBytes(ItemEnd).CopyTo(buffer, PropertyOffsets.ItemEnd);
-            BitConverter.GetBytes(unknown).CopyTo(buffer, PropertyOffsets.Unknown); // Assuming unknown is at offset 18
+            buffer[PropertyOffsets.Unknown1] = Unknown1;
+            buffer[PropertyOffsets.Quantity] = Quantity;
 
             return buffer;
         }
